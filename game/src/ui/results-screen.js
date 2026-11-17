@@ -9,6 +9,8 @@ import { MUTATION_BY_ID } from '../game/upgrades.js';
 import { ROUTES } from '../game/tides.js';
 import { ASPECTS, ASPECT_ORDER, formName } from '../game/attributes.js';
 import { drawJourneyChart, feats } from './journey-chart.js';
+import { drawRelicIcon } from './relic-icons.js';
+import { RELICS } from '../game/relics.js';
 
 export function rankFor(run) {
   const s = run.score / run.diff.score;
@@ -94,13 +96,19 @@ function drawScoreColumn(ctx, run, ui, x, py, age, won) {
     text(ctx, label, cx, cy, { size: 11, weight: 900, color: '#7fa6c0', stroke: false, spacing: 1.5 });
     text(ctx, val, cx, cy + 27, { size: 24, weight: 900, color: '#eafcff' });
   });
-  text(ctx, 'BUILD', x, py + 300, { size: 12, weight: 900, color: '#7fa6c0', stroke: false, spacing: 3 });
+  text(ctx, 'RELICS & BUILD', x, py + 300, { size: 12, weight: 900, color: '#7fa6c0', stroke: false, spacing: 3 });
+  const relics = (run.relics ?? []).map((id) => ({ relic: id }));
   const ids = Object.keys(run.mutations).sort((a, b) => run.mutations[b] - run.mutations[a]);
-  ids.slice(0, 8).forEach((id, i) => {
+  [...relics, ...ids].slice(0, 8).forEach((item, i) => {
     const bx = x + (i % 2) * 180, by = py + 326 + Math.floor(i / 2) * 26;
-    drawMutationIcon(ctx, id, bx + 9, by - 5, 10);
-    const l = run.mutations[id];
-    text(ctx, `${MUTATION_BY_ID[id].name}${l > 1 ? ` ×${l}` : ''}`, bx + 24, by, { size: 14, weight: 800, color: '#eafcff', stroke: false });
+    if (item.relic) {
+      drawRelicIcon(ctx, item.relic, bx + 9, by - 5, 10);
+      text(ctx, RELICS[item.relic].name, bx + 24, by, { size: 14, weight: 900, color: RELICS[item.relic].tier === 'boss' ? '#ff9ab8' : '#ffd166', stroke: false });
+      return;
+    }
+    drawMutationIcon(ctx, item, bx + 9, by - 5, 10);
+    const l = run.mutations[item];
+    text(ctx, `${MUTATION_BY_ID[item].name}${l > 1 ? ` ×${l}` : ''}`, bx + 24, by, { size: 14, weight: 800, color: '#eafcff', stroke: false });
   });
   if (!ids.length) text(ctx, 'no mutations: pure Pip', x, py + 330, { size: 15, weight: 700, color: '#9cc0d4', stroke: false });
 }

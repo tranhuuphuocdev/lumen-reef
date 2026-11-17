@@ -129,5 +129,6 @@ export function nearestEnemy(run, x, y, maxDist = Infinity, exclude = null) {
 
 export function enemyShot(run, x, y, angle, speed, opts = {}) {
   if (run.route === 'redbloom') speed *= 1.2;
+  if (run.relics?.includes('veil')) speed *= 0.78;
   run.enemyShots.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, r: opts.r ?? 7, life: opts.life ?? 5, color: opts.color ?? '#ff7aa8', accel: opts.accel ?? 0, curve: opts.curve ?? 0 });
 }

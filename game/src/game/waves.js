@@ -10,6 +10,7 @@ import { magnetiseAll } from './pickups.js';
 import { floatText } from './effects.js';
 import { layoutCurrents } from './currents.js';
 import { drawRoutes, routeMods, autoRoute, ROUTES } from './tides.js';
+import { RELIC_TIDES, drawRelics, takeRelic, autoRelic, hasRelic } from './relics.js';
 
 export const WAVE_PLANS = {
   1: { whorl: 16, flicker: 6 },
@@ -58,6 +59,9 @@ export function startWave(run, n) {
   w.noHit = true;
   w.name = WAVE_NAMES[n];
   w.mark = { score: run.score, kills: run.kills, time: run.time, hits: run.hitsTaken };
+  // Kelp Charm: every new tide regrows a shell.
+  const p = run.player;
+  if (n > 1 && hasRelic(run, 'kelp') && p.hp < p.stats.maxHp && !p.dead) { p.hp += 1; floatText(run, p.x, p.y - 40, 'KELP CHARM +1 SHELL', '#7dff9a', 18); }
   layoutCurrents(run, n);
   emit(run, 'waveStart', { n, name: w.name, boss: !!BOSS_WAVES[n] });
 }
@@ -89,11 +93,13 @@ export function updateWaves(run, dt) {
       }
       w.spawnCd = (bossAlive ? 3.2 : Math.max(0.4, 1.35 - n * 0.09)) * (0.7 + run.rng.next() * 0.6);
     }
-    // A tide never stalls: stragglers that keep their distance come hunting after a while.
-    if (!w.queue.length && !bossAlive && run.enemies.length <= 3) {
+    // A tide never stalls: once the queue is spent, foes that keep their distance (or got
+    // pinned against the reef wall) come hunting if nothing has fallen for a while.
+    if (!w.queue.length && !bossAlive && run.enemies.length) {
+      if (run.enemies.length !== w.stallCount) { w.stallCount = run.enemies.length; w.stallT = 0; }
       w.stallT = (w.stallT ?? 0) + dt;
-      if (w.stallT > 10) for (const e of run.enemies) e.hunt = true;
-    } else w.stallT = 0;
+      if (w.stallT > (run.enemies.length <= 3 ? 10 : 14)) for (const e of run.enemies) e.hunt = true;
+    } else { w.stallT = 0; w.stallCount = -1; }
     if (!w.queue.length && !run.enemies.length && !bossAlive) {
       if (n >= WAVES_TOTAL) {
         logTide(run, true);
@@ -118,6 +124,14 @@ export function updateWaves(run, dt) {
   if (w.phase === 'clear') {
     w.timer -= dt;
     if (w.timer <= 0) {
+      // Some tides end on a relic: three are offered and one is kept, before the route choice.
+      const tier = RELIC_TIDES[w.n];
+      if (tier && !(run.relicTides ??= []).includes(w.n)) {
+        run.relicTides.push(w.n);
+        const offer = drawRelics(run, tier);
+        if (offer.length && run.demo && !run.manualRoute) takeRelic(run, autoRelic(run, offer));
+        else if (offer.length) { w.phase = 'relic'; run.relicChoices = offer; return; }
+      }
       // The player picks the next tide's route; the pilot (demo and screenshots) picks its own.
       const choices = drawRoutes(run);
       if (run.demo && !run.manualRoute) { run.route = autoRoute(run, choices); (run.routes ??= []).push(run.route); startWave(run, w.n + 1); }
@@ -147,6 +161,13 @@ export function waveProgress(run) {
   if (!w.total) return 0;
   const left = (w.queue?.length ?? 0) + run.enemies.filter((e) => !e.boss).length + (w.boss && !w.boss.dead ? 1 : 0);
   return 1 - Math.min(1, left / w.total);
+}
+
+export function chooseRelic(run, id) {
+  takeRelic(run, id);
+  run.relicChoices = null;
+  run.wave.phase = 'clear';
+  run.wave.timer = 0;
 }
 
 export function chooseRoute(run, id) {

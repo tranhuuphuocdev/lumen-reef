@@ -12,6 +12,9 @@ import { text, panel, bar, keycap } from './widgets.js';
 import { drawMutationIcon } from './icons.js';
 import { withAlpha } from '../render/glow.js';
 import { ASPECTS, ASPECT_ORDER, formName, isLastLight } from '../game/attributes.js';
+import { drawAbilityIcon } from './ability-icons.js';
+import { drawRelicIcon } from './relic-icons.js';
+import { RELICS, RELIC_TIDES, RELICS_MAX } from '../game/relics.js';
 
 const TACTIC = {
   whorl: 'swarms', eel: 'lunges', blowfin: 'bursts', spitbloom: 'spits spores',
@@ -103,6 +106,30 @@ export function drawIncoming(ctx, run, x, y) {
   text(ctx, `${onField} on the reef now`, x + 14, ry + 6, { size: 12, weight: 600, color: '#7fa6c0', stroke: false });
   const next = run.wave.n + 1;
   if (next <= WAVES_TOTAL) text(ctx, `NEXT: ${WAVE_NAMES[next]}${BOSS_WAVES[next] ? ' · BOSS' : ''}`, x + 14, ry + 26, { size: 12, weight: 900, color: BOSS_WAVES[next] ? '#ff9ab8' : '#ffd166', stroke: false, spacing: 1 });
+  return y + h;
+}
+
+// The relics Pip holds, each with its glyph and what it does, and when the next one comes.
+export function drawRelics(ctx, run, x, y) {
+  const held = run.relics ?? [];
+  const w = 250, h = 40 + Math.max(1, held.length) * 34 + 22;
+  panel(ctx, x, y, w, h, { alpha: 0.72, border: 0.4, color: '#ffd166' });
+  text(ctx, 'RELICS', x + 14, y + 24, { size: 13, weight: 900, color: '#ffd166', stroke: false, spacing: 2 });
+  text(ctx, `${held.length} / ${RELICS_MAX}`, x + w - 14, y + 24, { size: 13, weight: 900, align: 'right', color: '#ffffff', stroke: false });
+  held.forEach((id, i) => {
+    const r = RELICS[id];
+    const ry = y + 50 + i * 34;
+    drawRelicIcon(ctx, id, x + 26, ry, 13);
+    text(ctx, r.name, x + 46, ry - 2, { size: 14, weight: 900, color: r.tier === 'boss' ? '#ff9ab8' : '#eafcff', stroke: false });
+    text(ctx, short(r.desc), x + 46, ry + 13, { size: 10, weight: 600, color: '#9cc0d4', stroke: false });
+  });
+  if (!held.length) text(ctx, 'clear tide 2 to find one', x + 14, y + 56, { size: 13, weight: 600, color: '#9cc0d4', stroke: false });
+  const nextTide = Object.keys(RELIC_TIDES).map(Number).find((n) => n >= run.wave.n && !(run.relicTides ?? []).includes(n));
+  if (nextTide) text(ctx, `NEXT: after tide ${nextTide}${RELIC_TIDES[nextTide] === 'boss' ? ' · BOSS RELIC' : ''}`, x + 14, y + h - 12, { size: 11, weight: 900, color: RELIC_TIDES[nextTide] === 'boss' ? '#ff9ab8' : '#ffd166', stroke: false, spacing: 1 });
+}
+
+function short(s) {
+  return s.length > 34 ? `${s.slice(0, 33).replace(/[ ,;]+\S*$/, '')}…` : s;
 }
 
 function dot(ctx, x, y, col, big = false) {
@@ -143,11 +170,11 @@ export function drawBuild(ctx, run, x, y) {
 export function drawAbilityBar(ctx, run, ui, t) {
   const p = run.player;
   const s = p.stats;
-  const slotW = 112, slotH = 60, gap = 10;
+  const slotW = 156, slotH = 64, gap = 10;
   const slots = [
-    { key: 'LMB', name: 'FIRE', info: `${s.projectiles} bolt${s.projectiles > 1 ? 's' : ''} · ${(s.fireRate * (p.surge > 0 ? 1.6 : 1)).toFixed(1)}/s`, frac: 1, col: p.surge > 0 ? '#ffd166' : '#7ff6ff' },
-    { key: 'SPACE', name: 'DASH', info: p.dashCd <= 0 ? 'READY' : `${p.dashCd.toFixed(1)}s`, frac: 1 - p.dashCd / s.dashCooldown, col: '#9cf7ff' },
-    { key: 'E', name: 'PULSE', info: p.pulse >= PLAYER.pulseCharge ? 'READY' : `${Math.floor(p.pulse)}%`, frac: p.pulse / PLAYER.pulseCharge, col: '#5ff0ff', glow: p.pulse >= PLAYER.pulseCharge },
+    { icon: 'fire', key: 'LMB', name: 'FIRE', info: `${s.projectiles} bolt${s.projectiles > 1 ? 's' : ''} · ${(s.fireRate * (p.surge > 0 ? 1.6 : 1)).toFixed(1)}/s`, frac: 1, col: p.surge > 0 ? '#ffd166' : '#7ff6ff' },
+    { icon: 'dash', key: 'SPACE', name: 'DASH', info: p.dashCd <= 0 ? 'READY' : `${p.dashCd.toFixed(1)}s`, frac: 1 - p.dashCd / s.dashCooldown, col: '#9cf7ff' },
+    { icon: 'pulse', key: 'E', name: 'PULSE', info: p.pulse >= PLAYER.pulseCharge ? 'READY' : `${Math.floor(p.pulse)}%`, frac: p.pulse / PLAYER.pulseCharge, col: '#5ff0ff', glow: p.pulse >= PLAYER.pulseCharge },
   ];
   const total = slots.length * slotW + (slots.length - 1) * gap;
   const x0 = VIEW.w / 2 - total / 2, y = VIEW.h - slotH - 14;
@@ -163,9 +190,13 @@ export function drawAbilityBar(ctx, run, ui, t) {
     ctx.restore();
     ctx.fillStyle = withAlpha(sl.col, 0.18);
     ctx.fillRect(x + 2, y + slotH - 2 - (slotH - 4) * Math.max(0, Math.min(1, sl.frac)), slotW - 4, (slotH - 4) * Math.max(0, Math.min(1, sl.frac)));
-    keycap(ctx, sl.key, x + 8, y + 20, { size: 11 });
-    text(ctx, sl.name, x + slotW - 10, y + 22, { size: 15, weight: 900, align: 'right', color: '#ffffff', stroke: false, spacing: 1 });
-    text(ctx, sl.info, x + slotW / 2, y + 47, { size: 13, weight: 800, align: 'center', color: sl.frac >= 1 ? sl.col : '#9cc0d4', stroke: false });
+    // The picture on the left, the key, name and state on the right.
+    ctx.fillStyle = 'rgba(2, 10, 24, 0.55)';
+    ctx.beginPath(); ctx.roundRect(x + 5, y + 5, 54, slotH - 10, 8); ctx.fill();
+    drawAbilityIcon(ctx, sl.icon, x + 32, y + slotH / 2, 46, sl.col, sl.frac >= 1, t);
+    const kw = keycap(ctx, sl.key, x + 66, y + 22, { size: 10 });
+    text(ctx, sl.name, x + 70 + kw, y + 22, { size: 15, weight: 900, color: '#ffffff', stroke: false, spacing: 1 });
+    text(ctx, sl.info, x + 67, y + 48, { size: 13, weight: 800, color: sl.frac >= 1 ? sl.col : '#9cc0d4', stroke: false });
   });
   if (p.surge > 0) text(ctx, `SURGE ${p.surge.toFixed(1)}s`, x0 + total / 2, y - 32, { size: 15, weight: 900, align: 'center', color: '#ffd166', glow: '#ffd166', spacing: 2 });
 }

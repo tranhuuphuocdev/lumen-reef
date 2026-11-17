@@ -10,6 +10,7 @@ import { chargePulse } from './player.js';
 import { checkPerfectDodge } from './reflexes.js';
 import { routeMods } from './tides.js';
 import { isLastLight } from './attributes.js';
+import { hasRelic, relicScore } from './relics.js';
 
 export function damageEnemy(run, e, amount, src = {}) {
   if (e.dead || e.invuln) {
@@ -19,7 +20,9 @@ export function damageEnemy(run, e, amount, src = {}) {
   const s = run.player.stats;
   let dmg = amount;
   let crit = false;
-  if (!src.noCrit && run.rng.chance(s.crit)) { dmg *= 2; crit = true; }
+  if (!src.noCrit && run.rng.chance(s.crit)) { dmg *= s.critMult ?? 2; crit = true; }
+  // Undertow Heart: a foe caught in a current is easier to break.
+  if (e.inCurrent && run.currents?.length && hasRelic(run, 'heart')) dmg *= 1.4;
   // LAST LIGHT: on the final shell Pip hits half again as hard.
   if (isLastLight(run)) dmg *= 1.5;
   // An exposed boss takes heavy damage at its weak point.
@@ -52,7 +55,7 @@ export function killEnemy(run, e) {
   run.bestCombo = Math.max(run.bestCombo, run.combo);
   run.mult = Math.min(COMBO.maxMult, 1 + Math.floor(run.combo / COMBO.killsPerStep));
   const mods = routeMods(run);
-  const pts = Math.round(e.score * run.mult * run.diff.score * mods.score);
+  const pts = Math.round(e.score * run.mult * run.diff.score * mods.score * relicScore(run));
   run.score += pts;
   floatText(run, e.x, e.y - 8, `+${pts}`, run.mult > 1 ? '#ffd166' : '#bff9ff', e.boss ? 30 : 16);
   burst(run, e.x, e.y, e.color, e.boss ? 80 : 14 + Math.round(e.r / 2), e.boss ? 420 : 200, e.boss ? 1.4 : 0.6, e.boss ? 6 : 3);

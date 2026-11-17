@@ -9,7 +9,7 @@ import { formatScore } from '../core/math.js';
 import { text, panel, bar } from './widgets.js';
 import { drawHeart } from '../render/projectiles.js';
 import { withAlpha } from '../render/glow.js';
-import { drawObjectives, drawTideTrack, drawIncoming, drawStatus, drawBuild, drawAbilityBar, drawControlsAndKeys } from './hud-panels.js';
+import { drawObjectives, drawTideTrack, drawIncoming, drawRelics, drawStatus, drawBuild, drawAbilityBar, drawControlsAndKeys } from './hud-panels.js';
 import { BOSS_PHASES } from '../game/bosses.js';
 import { routeOf } from '../game/tides.js';
 import { drawCallout } from './callout.js';
@@ -21,7 +21,8 @@ export function drawHud(ctx, run, ui, t) {
   drawScorePanel(ctx, run, ui);
   const statusH = drawStatus(ctx, run, 18, 92, t);
   drawBuild(ctx, run, 18, 92 + statusH);
-  drawIncoming(ctx, run, VIEW.w - 268, 150);
+  const incomingEnd = drawIncoming(ctx, run, VIEW.w - 268, 150);
+  drawRelics(ctx, run, VIEW.w - 268, incomingEnd + 10);
   drawAbilityBar(ctx, run, ui, t);
   drawControlsAndKeys(ctx, ui);
   if (run.wave.boss && !run.wave.boss.dead && run.wave.phase === 'fight') drawBossBar(ctx, run.wave.boss, ui);

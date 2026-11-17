@@ -9,7 +9,8 @@ import { emit } from './state.js';
 import { burst, ring, shake, flash, floatText, arc } from './effects.js';
 import { damageEnemy } from './combat.js';
 
-export function releaseSonar(run) {
+// A free pulse (Maw's Lantern) keeps the charge Pip has built and rings a little weaker.
+export function releaseSonar(run, { free = false } = {}) {
   const p = run.player;
   const s = p.stats;
   // Glim Lens: glim gathered since the last pulse widens it.
@@ -17,10 +18,9 @@ export function releaseSonar(run) {
   const R = s.pulseRadius * (1 + lens);
   // Static Wake: a pulse right after a dash crackles with lightning.
   const charged = s.wake > 0 && p.sinceDash < 0.9;
-  p.pulse = 0;
-  p.glimSincePulse = 0;
+  if (!free) { p.pulse = 0; p.glimSincePulse = 0; }
   p.casting = 0.35;
-  run.sonar.push({ x: p.x, y: p.y, r: 0, max: R, speed: R / 0.5, hit: new Set(), charged, power: 1 });
+  run.sonar.push({ x: p.x, y: p.y, r: 0, max: R, speed: R / 0.5, hit: new Set(), charged, power: free ? 0.7 : 1 });
   // Echo Bell: a second, smaller wave follows from the same spot.
   if (s.echo) run.sonar.push({ x: p.x, y: p.y, r: 0, max: R * 0.8, speed: R / 0.5, hit: new Set(), charged, power: 0.6, delay: 0.42, echo: true });
   emit(run, 'pulse');
@@ -78,7 +78,7 @@ function sonarHit(run, w, e, d) {
       e.interrupt = true;
       broke = broke ?? 'INTERRUPTED';
     }
-    e.exposed = Math.max(e.exposed ?? 0, 3.2);
+    e.exposed = Math.max(e.exposed ?? 0, run.relics?.includes('jaw') ? 5.1 : 3.2);
     e.stun = Math.max(e.stun, 0.5);
   } else {
     if (e.kind === 'eel' && (e.state === 'aim' || e.state === 'lunge')) { e.state = 'move'; e.t = 0; broke = 'BROKEN'; }

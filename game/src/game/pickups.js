@@ -3,6 +3,7 @@
 
 import { emit, xpForLevel } from './state.js';
 import { burst, floatText } from './effects.js';
+import { releaseSonar } from './sonar.js';
 
 export function dropGlim(run, x, y, value) {
   let left = value;
@@ -65,6 +66,11 @@ function collect(run, g) {
   }
   run.glim += g.value;
   p.glimSincePulse = (p.glimSincePulse ?? 0) + g.value;
+  // Maw's Lantern: every 30 glim gathered fires a free pulse.
+  if (run.relics?.includes('lantern')) {
+    run.lanternGlim = (run.lanternGlim ?? 0) + g.value;
+    if (run.lanternGlim >= 30) { run.lanternGlim -= 30; releaseSonar(run, { free: true }); }
+  }
   run.xp += g.value;
   run.score += g.value * 5;
   emit(run, 'glim', { pitch: run.xp % 10 });

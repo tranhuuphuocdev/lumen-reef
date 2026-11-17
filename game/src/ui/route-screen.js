@@ -9,6 +9,8 @@ import { WAVE_NAMES } from '../game/waves.js';
 import { BOSS_WAVES } from '../config.js';
 import { text, panel, keycap } from './widgets.js';
 import { withAlpha } from '../render/glow.js';
+import { RELIC_TIDES } from '../game/relics.js';
+import { drawRelicIcon } from './relic-icons.js';
 
 export function drawRouteChoice(ctx, run, ui, t) {
   ctx.fillStyle = 'rgba(2, 10, 24, 0.62)';
@@ -63,7 +65,7 @@ function drawDiveMap(ctx, run, y, t) {
   text(ctx, 'THE DIVE SO FAR', x0, y + 26, { size: 13, weight: 900, color: '#9cd8ea', stroke: false, spacing: 3 });
   const next = run.wave.n + 1;
   const step = w / (WAVES_TOTAL - 1);
-  const ny = y + 66;
+  const ny = y + 70;
   for (let n = 1; n <= WAVES_TOTAL; n++) {
     const x = x0 + (n - 1) * step;
     const l = log.find((e) => e.n === n);
@@ -85,6 +87,12 @@ function drawDiveMap(ctx, run, y, t) {
     const mark = boss ? '♛' : l?.flawless ? '★' : isNext ? '?' : `${n}`;
     text(ctx, mark, x, ny + 5, { size: boss ? 15 : 12, weight: 900, align: 'center', color: l ? '#04121f' : boss ? '#ff9ab8' : '#cfefff', stroke: false });
     const label = boss ? (boss === 'maw' ? 'UNDERTOW MAW' : 'QUEEN NACRE') : l ? ROUTES[l.route].name : isNext ? 'YOUR CHOICE' : '';
+    // Relic caches sit above the tides that end in one: the relic kept, or a promise of one.
+    if (RELIC_TIDES[n]) {
+      const got = (run.relics ?? [])[Object.keys(RELIC_TIDES).map(Number).indexOf(n)];
+      if (got && l) drawRelicIcon(ctx, got, x, ny - 30, 11);
+      else text(ctx, RELIC_TIDES[n] === 'boss' ? 'BOSS RELIC' : 'RELIC', x, ny - 24, { size: 10, weight: 900, align: 'center', color: '#ffd166', stroke: false, spacing: 1 });
+    }
     if (label) text(ctx, label, x, ny + 36, { size: 11, weight: 900, align: 'center', color: boss ? '#ff9ab8' : isNext ? '#ffffff' : col, stroke: false, spacing: 1 });
   }
 }

@@ -14,7 +14,8 @@ import { showCallout } from './ui/callout.js';
 import { drawTitle, DIFF_ORDER } from './ui/title-screen.js';
 import { drawLevelUp } from './ui/levelup-screen.js';
 import { drawRouteChoice } from './ui/route-screen.js';
-import { chooseRoute } from './game/waves.js';
+import { chooseRoute, chooseRelic } from './game/waves.js';
+import { drawRelicChoice } from './ui/relic-screen.js';
 import { drawResults, drawPause } from './ui/results-screen.js';
 import { createInput } from './core/input.js';
 import { createAudio } from './core/audio.js';
@@ -143,6 +144,10 @@ function drainEvents() {
         audio.sfx.victory();
         showBanner(`EVOLVED: ${d.name.toUpperCase()}`, d.power.toUpperCase(), d.color, true, 3);
         break;
+      case 'relic':
+        audio.sfx.victory();
+        showBanner(`RELIC: ${d.name.toUpperCase()}`, d.desc.toUpperCase(), d.color, false, 2.6);
+        break;
       case 'lastLight':
         audio.sfx.bossPhase();
         showBanner('LAST LIGHT', 'ONE SHELL LEFT · DAMAGE ×1.5 · PULSE CHARGES ×2', '#ff6f9c', false, 2.4);
@@ -215,12 +220,32 @@ function update(dt) {
         audio.sfx.levelUp();
       } else run.pendingLevels = 0;
     }
+    if (run.wave.phase === 'relic' && ui.mode === 'play' && run.pendingLevels === 0) {
+      ui.mode = 'relic';
+      ui.relicAge = 0;
+      audio.sfx.levelUp();
+    }
     if (run.wave.phase === 'route' && ui.mode === 'play' && run.pendingLevels === 0) {
       ui.mode = 'route';
       ui.routeAge = 0;
       audio.sfx.levelUp();
     }
     if (run.outcome) finish();
+    return;
+  }
+
+  if (ui.mode === 'relic') {
+    ui.relicAge += dt;
+    let pick = -1;
+    if (hit?.startsWith('relic:')) pick = Number(hit.slice(6));
+    for (let i = 0; i < 3; i++) if (input.wasPressed(`Digit${i + 1}`, `Numpad${i + 1}`)) pick = i;
+    if (ui.relicAge < 0.4) pick = -1;
+    if (pick >= 0 && pick < (run.relicChoices?.length ?? 0)) {
+      chooseRelic(run, run.relicChoices[pick]);
+      drainEvents();
+      audio.sfx.pick();
+      ui.mode = 'play';
+    }
     return;
   }
 
@@ -287,6 +312,7 @@ function render() {
     if (ui.mode !== 'results') drawHud(ctx, run, ui, clock);
     if (ui.mode === 'levelup') drawLevelUp(ctx, run, ui, clock);
     if (ui.mode === 'route' && run.routeChoices) drawRouteChoice(ctx, run, ui, clock);
+    if (ui.mode === 'relic' && run.relicChoices) drawRelicChoice(ctx, run, ui, clock);
     if (ui.mode === 'paused') drawPause(ctx, run, ui);
     if (ui.mode === 'results') drawResults(ctx, run, ui, clock);
     if (ui.mode !== 'play') drawCrosshair(ctx, ui.mouse.x, ui.mouse.y, 0, clock);

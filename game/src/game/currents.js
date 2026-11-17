@@ -63,7 +63,7 @@ export function flowAt(run, x, y) {
 export function applyCurrents(run, dt) {
   if (!run.currents?.length) return;
   const p = run.player;
-  if (!p.dead && p.dashT <= 0) {
+  if (!p.dead && p.dashT <= 0 && !run.relics?.includes('heart')) {
     // Pip feels a current but can always swim against it (flow is capped well below swim speed).
     const f = flowAt(run, p.x, p.y);
     const fm = Math.hypot(f.x, f.y);
@@ -77,8 +77,13 @@ export function applyCurrents(run, dt) {
     // Foes are only nudged (and hunters not at all), so no current can pin one to a wall.
     if (e.boss || e.dead || e.hunt) continue;
     const f = flowAt(run, e.x, e.y);
-    e.x += f.x * dt * 0.4;
-    e.y += f.y * dt * 0.4;
+    e.inCurrent = Math.abs(f.x) + Math.abs(f.y) > 30;
+    // Capped below the foe's own swimming speed, even on a Riptide.
+    const fm = Math.hypot(f.x, f.y) * 0.4;
+    const cap = (e.speed ?? 100) * 0.6;
+    const k = fm > cap ? cap / fm : 1;
+    e.x += f.x * dt * 0.4 * k;
+    e.y += f.y * dt * 0.4 * k;
   }
   for (const b of run.bullets) {
     const f = flowAt(run, b.x, b.y);

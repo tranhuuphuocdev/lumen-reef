@@ -11,6 +11,7 @@ import { spawnEnemy } from './game/enemies.js';
 import { autopilot, autopilotChoice, createAttractRun } from './game/autopilot.js';
 import { applyMutation, drawChoices } from './game/upgrades.js';
 import { showCallout } from './ui/callout.js';
+import { takeRelic, drawRelics } from './game/relics.js';
 
 function simulate(run, seconds, { autoPick = true } = {}) {
   const steps = Math.round(seconds / TICK);
@@ -56,9 +57,15 @@ export function stageShot(name, ui) {
     run.xp = 31;
     run.score = 16420;
     run.kills = 214;
+    // The relic a real dive would have kept after tide 2.
+    takeRelic(run, params.get('relic') ?? 'sunstone');
+    run.relicTides = [2];
     const bossWave = Number(params.get('wave') ?? 5);
     if (bossWave === 10) {
       grow(run, ['split', 'pearls', 'static', 'quick', 'dense', 'ward', 'seeker', 'needle']);
+      takeRelic(run, 'jaw');
+      takeRelic(run, 'kelp');
+      run.relicTides = [2, 5, 8];
       run.level = 16;
       run.score = 98760;
       run.kills = 455;
@@ -113,6 +120,21 @@ export function stageShot(name, ui) {
     ui.mode = 'route';
     ui.routeAge = 2;
     return { run, clock: run.time, mouse: { x: 1040, y: 530 } };
+  }
+
+  if (name === 'relic') {
+    // The Maw has just fallen: its three boss relics rise.
+    const run = createRun({ seed: 800 + seed, demo: 'invincible' });
+    grow(run, ['split', 'dense', 'keen', 'pearls', 'deep', 'split']);
+    takeRelic(run, 'sunstone');
+    run.relicTides = [2, 5];
+    startWave(run, 5);
+    run.wave.phase = 'relic';
+    run.relicChoices = drawRelics(run, 'boss');
+    followCamera(run, 0, true);
+    ui.mode = 'relic';
+    ui.relicAge = 2;
+    return { run, clock: run.time, mouse: { x: 640, y: 420 } };
   }
 
   if (name === 'bestiary') {
