@@ -5,6 +5,7 @@ import { VIEW, DIFFICULTY } from '../config.js';
 import { formatScore } from '../core/math.js';
 import { text, panel, button, keycap } from './widgets.js';
 import { drawGlow, withAlpha } from '../render/glow.js';
+import { drawTitleArt } from './title-art.js';
 
 export const DIFF_ORDER = ['calm', 'rising', 'abyss'];
 
@@ -15,6 +16,13 @@ export function drawTitle(ctx, ui, t) {
   g.addColorStop(0.5, 'rgba(2, 10, 24, 0.35)');
   g.addColorStop(1, 'rgba(2, 10, 24, 0.8)');
   ctx.fillStyle = g;
+  ctx.fillRect(0, 0, VIEW.w, VIEW.h);
+  drawTitleArt(ctx, t);
+  // Keep the menu legible over the creatures.
+  const veil = ctx.createRadialGradient(VIEW.w / 2, 380, 120, VIEW.w / 2, 380, 560);
+  veil.addColorStop(0, 'rgba(2, 10, 24, 0.55)');
+  veil.addColorStop(1, 'rgba(2, 10, 24, 0)');
+  ctx.fillStyle = veil;
   ctx.fillRect(0, 0, VIEW.w, VIEW.h);
 
   drawLogo(ctx, VIEW.w / 2, 168, t);

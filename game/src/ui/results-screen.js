@@ -53,7 +53,7 @@ export function drawResults(ctx, run, ui, t) {
     ['TIDE', won ? `${WAVES_TOTAL} / ${WAVES_TOTAL}` : `${run.wave.n} / ${WAVES_TOTAL}`],
     ['FOES', `${run.kills}`],
     ['BEST CHAIN', `${run.bestCombo}`],
-    ['LEVEL', `${run.level}`],
+    ['PERFECT DODGES', `${run.perfects ?? 0}`],
     ['TIME', formatTime(run.time)],
     ['BOSSES', `${run.bossesSlain} / 2`],
   ];

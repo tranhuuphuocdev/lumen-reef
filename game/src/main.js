@@ -6,7 +6,7 @@ import { createInput } from './core/input.js';
 import { createAudio } from './core/audio.js';
 import { createRun } from './game/state.js';
 import { stepRun, followCamera } from './game/sim.js';
-import { autopilot, autopilotChoice } from './game/autopilot.js';
+import { autopilot, autopilotChoice, createAttractRun } from './game/autopilot.js';
 import { drawChoices, applyMutation } from './game/upgrades.js';
 import { releasePulse } from './game/player.js';
 import { buildReef } from './render/background.js';
@@ -37,7 +37,7 @@ const ui = {
   resultAge: 0,
 };
 
-let run = createRun({ seed: 4242, difficulty: 'rising', demo: true });
+let run = createAttractRun(4242);
 let clock = 0;
 
 function loadBest() {
@@ -59,7 +59,7 @@ function startDive() {
 }
 
 function toTitle() {
-  run = createRun({ seed: 4242 + Math.floor(clock), difficulty: 'rising', demo: true });
+  run = createAttractRun(4242 + Math.floor(clock));
   ui.mode = 'title';
 }
 

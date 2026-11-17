@@ -3,7 +3,9 @@
 // mode and stages the screenshot scenes, using the same controls a player has.
 
 import { WORLD } from '../config.js';
-import { MUTATIONS } from './upgrades.js';
+import { MUTATIONS, applyMutation } from './upgrades.js';
+import { createRun } from './state.js';
+import { startWave } from './waves.js';
 
 export function autopilot(run) {
   const p = run.player;
@@ -60,4 +62,12 @@ export function autopilotChoice(run, choices) {
   const pref = ['split', 'quick', 'dense', 'pearls', 'static', 'needle', 'seeker', 'ricochet', 'bell', 'nova', 'ward'];
   const sorted = [...choices].sort((a, b) => (pref.indexOf(a) + 99) % 99 - (pref.indexOf(b) + 99) % 99);
   return sorted[0] ?? MUTATIONS[0].id;
+}
+
+// The dive that plays behind the title screen: a few waves in, already mutated, so the reef is busy.
+export function createAttractRun(seed) {
+  const run = createRun({ seed, difficulty: 'rising', demo: 'invincible' });
+  for (const id of ['split', 'quick', 'pearls', 'static']) applyMutation(run, id);
+  startWave(run, 4);
+  return run;
 }

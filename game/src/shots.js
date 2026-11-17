@@ -8,7 +8,7 @@ import { createRun } from './game/state.js';
 import { stepRun, followCamera } from './game/sim.js';
 import { startWave } from './game/waves.js';
 import { spawnEnemy } from './game/enemies.js';
-import { autopilot, autopilotChoice } from './game/autopilot.js';
+import { autopilot, autopilotChoice, createAttractRun } from './game/autopilot.js';
 import { applyMutation, drawChoices } from './game/upgrades.js';
 
 function simulate(run, seconds, { autoPick = true } = {}) {
@@ -36,8 +36,8 @@ export function stageShot(name, ui) {
   const at = Number(params.get('t') ?? 0);
 
   if (name === 'title') {
-    const run = createRun({ seed: 4242 + seed, demo: 'invincible' });
-    simulate(run, at || 34);
+    const run = createAttractRun(4242 + seed);
+    simulate(run, at || 9);
     followCamera(run, 0, true);
     ui.mode = 'title';
     ui.best = 48210;
