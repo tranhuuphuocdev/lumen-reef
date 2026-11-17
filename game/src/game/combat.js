@@ -132,7 +132,7 @@ export function resolveCombat(run, dt) {
   for (let i = run.bullets.length - 1; i >= 0; i--) {
     const b = run.bullets[i];
     for (const e of run.enemies) {
-      if (e.dead || b.hit.has(e.id)) continue;
+      if (e.dead || e.veiled || b.hit.has(e.id)) continue;
       const rr = e.r + b.r;
       if ((e.x - b.x) ** 2 + (e.y - b.y) ** 2 > rr * rr) continue;
       b.hit.add(e.id);
@@ -162,7 +162,7 @@ export function resolveCombat(run, dt) {
   if (s.orbit > 0) {
     for (const o of orbitPositions(run)) {
       for (const e of run.enemies) {
-        if (e.dead) continue;
+        if (e.dead || e.veiled) continue;
         e.pearlCd = Math.max(0, (e.pearlCd ?? 0) - dt / s.orbit);
         const rr = e.r + o.r;
         if (e.pearlCd <= 0 && (e.x - o.x) ** 2 + (e.y - o.y) ** 2 < rr * rr) {

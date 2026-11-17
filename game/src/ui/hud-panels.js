@@ -19,6 +19,7 @@ import { RELICS, RELIC_TIDES, RELICS_MAX } from '../game/relics.js';
 const TACTIC = {
   whorl: 'swarms', eel: 'lunges', blowfin: 'bursts', spitbloom: 'spits spores',
   ironclaw: 'armoured', flicker: 'darts in packs', broodbell: 'splits in 4',
+  lurker: 'pulse to see',
 };
 
 // WIN and LOSE pills under the tide title.

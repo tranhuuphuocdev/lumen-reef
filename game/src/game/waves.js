@@ -18,11 +18,11 @@ export const WAVE_PLANS = {
   3: { whorl: 16, blowfin: 6, eel: 8, spitbloom: 3 },
   4: { whorl: 18, spitbloom: 6, ironclaw: 2, flicker: 14, eel: 6, broodbell: 2 },
   5: { whorl: 6, flicker: 6, eel: 4, blowfin: 3, spitbloom: 2 },
-  6: { whorl: 22, eel: 10, blowfin: 8, spitbloom: 6, ironclaw: 3 },
-  7: { flicker: 28, broodbell: 4, spitbloom: 8, ironclaw: 4, eel: 10 },
-  8: { whorl: 28, blowfin: 10, spitbloom: 9, ironclaw: 5, broodbell: 4, eel: 12 },
-  9: { whorl: 28, eel: 14, blowfin: 12, spitbloom: 11, ironclaw: 6, broodbell: 5, flicker: 18 },
-  10: { whorl: 8, flicker: 8, eel: 4, spitbloom: 3, ironclaw: 2, broodbell: 2 },
+  6: { whorl: 22, eel: 10, blowfin: 8, spitbloom: 6, ironclaw: 3, lurker: 3 },
+  7: { flicker: 28, broodbell: 4, spitbloom: 8, ironclaw: 4, eel: 10, lurker: 3 },
+  8: { whorl: 28, blowfin: 10, spitbloom: 9, ironclaw: 5, broodbell: 4, eel: 12, lurker: 4 },
+  9: { whorl: 28, eel: 14, blowfin: 12, spitbloom: 11, ironclaw: 6, broodbell: 5, flicker: 18, lurker: 5 },
+  10: { whorl: 8, flicker: 8, eel: 4, spitbloom: 3, ironclaw: 2, broodbell: 2, lurker: 2 },
 };
 
 export const WAVE_NAMES = {
@@ -42,7 +42,7 @@ function buildQueue(run, n) {
     [q[i], q[j]] = [q[j], q[i]];
   }
   // Weak foes first so each wave builds.
-  const weight = { flicker: 0, whorl: 0, eel: 1, blowfin: 1, spitbloom: 2, broodbell: 2, ironclaw: 3 };
+  const weight = { flicker: 0, whorl: 0, eel: 1, blowfin: 1, spitbloom: 2, broodbell: 2, lurker: 2, ironclaw: 3 };
   return q.map((k, i) => ({ k, s: i / q.length + weight[k] * 0.12 })).sort((a, b) => a.s - b.s).map((x) => x.k);
 }
 
@@ -99,6 +99,11 @@ export function updateWaves(run, dt) {
       if (run.enemies.length !== w.stallCount) { w.stallCount = run.enemies.length; w.stallT = 0; }
       w.stallT = (w.stallT ?? 0) + dt;
       if (w.stallT > (run.enemies.length <= 3 ? 10 : 14)) for (const e of run.enemies) e.hunt = true;
+      // Only Lurkers left in the gloom and nothing to charge a pulse with: the gloom thins.
+      if (w.stallT > 5 && run.enemies.every((e) => e.veiled)) {
+        for (const e of run.enemies) { e.veiled = false; e.untargetable = false; e.revealT = 99; e.hunt = true; }
+        floatText(run, run.player.x, run.player.y - 60, 'THE GLOOM THINS', '#cbb8ff', 22);
+      }
     } else { w.stallT = 0; w.stallCount = -1; }
     if (!w.queue.length && !run.enemies.length && !bossAlive) {
       if (n >= WAVES_TOTAL) {

@@ -80,7 +80,8 @@ const WAVE_HINTS = {
   3: 'Currents carry you, your foes and every shot: ride a stream to outrun danger',
   4: 'Chain 25 kills without being hit to start a SURGE',
   5: 'Boss: your Pulse interrupts its attacks and exposes the WEAK POINT',
-  6: 'A vortex swirls in the reef: its pull bends your bolts and drags you inward',
+  6: 'Gloom Lurkers hide in the dark: bolts pass through them until your Pulse (E) reveals them',
+  7: 'A vortex swirls in the reef: its pull bends your bolts and drags you inward',
   10: 'Queen Nacre hides in her shell: a Pulse cracks it open',
 };
 

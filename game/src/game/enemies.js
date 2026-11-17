@@ -1,7 +1,9 @@
 // The reef's glowing foes. Each kind has a body (radius, health, speed, score, glim) and a
 // behaviour: Spinewhorls swarm, Lash Eels circle then lunge, Blowfins swell and burst, Spitblooms
 // keep their distance and lob spore volleys, Ironclaws soak damage, Flickers dart in packs and
-// Broodbells split into Flickers when popped. Elites are larger, tougher and always drop a heart.
+// Broodbells split into Flickers when popped, and Gloom Lurkers stalk unseen: bolts pass through
+// them until a sonar pulse reveals them for a few seconds. Elites are larger, tougher and always
+// drop a heart.
 
 import { WORLD } from '../config.js';
 import { clamp, angleDiff } from '../core/math.js';
@@ -18,6 +20,7 @@ export const ENEMY_KINDS = {
   ironclaw: { name: 'Ironclaw', r: 26, hp: 150, speed: 58, score: 45, glim: 6, color: '#ff5a5a', contact: 1, heavy: true },
   flicker: { name: 'Flicker', r: 8, hp: 7, speed: 210, score: 4, glim: 1, color: '#7fd8ff', contact: 1 },
   broodbell: { name: 'Broodbell', r: 24, hp: 80, speed: 55, score: 35, glim: 4, color: '#c58bff', contact: 1 },
+  lurker: { name: 'Gloom Lurker', r: 21, hp: 58, speed: 112, score: 40, glim: 5, color: '#a98bff', contact: 1 },
 };
 
 export function spawnEnemy(run, kind, x, y, { elite = false, hpScale = 1, speedScale = 1 } = {}) {
@@ -48,6 +51,7 @@ export function spawnEnemy(run, kind, x, y, { elite = false, hpScale = 1, speedS
     spawnT: 0.6,
     harmless: true,
   };
+  if (kind === 'lurker') { e.veiled = true; e.untargetable = true; }
   if (kind === 'broodbell') e.onDeath = (r, me) => { for (let i = 0; i < 4; i++) spawnEnemy(r, 'flicker', me.x + r.rng.range(-20, 20), me.y + r.rng.range(-20, 20)); };
   run.enemies.push(e);
   return e;
@@ -75,6 +79,8 @@ export function updateEnemies(run, dt) {
     e.hitFlash = Math.max(0, e.hitFlash - dt);
     if (e.exposed > 0) e.exposed -= dt;
     if (e.forcedOpen > 0) e.forcedOpen -= dt;
+    // A revealed Lurker slips back into the gloom when its reveal runs out.
+    if (e.revealT > 0) { e.revealT -= dt; if (e.revealT <= 0) { e.veiled = true; e.untargetable = true; } }
     if (e.spawnT > 0) { e.spawnT -= dt; if (e.spawnT <= 0) e.harmless = false; }
     const toP = Math.atan2(p.y - e.y, p.x - e.x);
     const dP = Math.hypot(p.x - e.x, p.y - e.y);
@@ -132,6 +138,23 @@ function separate(list) {
 const toward = (a, sp) => ({ x: Math.cos(a) * sp, y: Math.sin(a) * sp });
 
 const BEHAVIOUR = {
+  // Gloom Lurker: drifts in unseen, its eyes the only sign; close in, they flare and it strikes.
+  lurker(run, e, dt, toP, dP) {
+    if (e.state === 'move') {
+      if (dP < 170 && e.t > 1.4) { e.state = 'aim'; e.t = 0; e.lunge = toP; }
+      return toward(toP + Math.sin(e.t * 1.3 + e.phase) * 0.6, e.speed * (e.veiled ? 1 : 0.7));
+    }
+    if (e.state === 'aim') {
+      e.lunge += angleDiff(e.lunge, toP) * Math.min(1, dt * 5);
+      if (e.t > 0.6) { e.state = 'lunge'; e.t = 0; }
+      return { x: 0, y: 0 };
+    }
+    if (e.state === 'lunge') {
+      if (e.t > 0.35) { e.state = 'move'; e.t = 0; }
+      return toward(e.lunge, 560 * run.diff.speed);
+    }
+    return { x: 0, y: 0 };
+  },
   whorl(run, e, dt, toP) {
     const wob = Math.sin(e.t * 3 + e.phase) * 0.5;
     return toward(toP + wob, e.speed);

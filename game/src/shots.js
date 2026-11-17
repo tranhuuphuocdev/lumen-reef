@@ -143,11 +143,12 @@ export function stageShot(name, ui) {
     run.wave.n = 4;
     run.wave.phase = 'clear';
     run.wave.timer = 999;
-    const kinds = ['whorl', 'eel', 'blowfin', 'spitbloom', 'ironclaw', 'flicker', 'broodbell', 'whorl'];
+    const kinds = ['whorl', 'eel', 'blowfin', 'spitbloom', 'ironclaw', 'flicker', 'broodbell', 'whorl', 'lurker', 'lurker'];
     kinds.forEach((k, i) => {
       const a = (i / kinds.length) * Math.PI * 2;
       const e = spawnEnemy(run, k, run.player.x + Math.cos(a) * 250, run.player.y + Math.sin(a) * 200, { elite: i === 7 });
       e.harmless = true;
+      if (i === 9) { e.veiled = false; e.untargetable = false; e.revealT = 3.5; }
     });
     const idle = { move: { x: 0, y: 0 }, aimX: run.player.x + 200, aimY: run.player.y, fire: false, dash: false, pulse: false };
     for (let i = 0; i < Math.round((at || 1.2) / TICK); i++) { stepRun(run, idle, TICK); run.events.length = 0; }

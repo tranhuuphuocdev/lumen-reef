@@ -3,7 +3,8 @@
 // Spinewhorl urchins bristle with swaying spines, Lash Eels ripple along a jointed spine with a
 // fin ribbon and photophores, Blowfins flutter and erect their spines when they swell, Spitbloom
 // anemones sway in the current and recoil when they spit, Ironclaw crabs walk on jointed legs and
-// snap their claws, Flickers are darting minnows, Broodbells are bells full of young.
+// snap their claws, Flickers are darting minnows, Broodbells are bells full of young, and Gloom
+// Lurkers are shadow rays: unseen but for a ripple and two eyes until a pulse lights them up.
 
 import { drawGlow, withAlpha, mix } from './glow.js';
 import { getRig, chain, blink } from './rigs.js';
@@ -23,7 +24,7 @@ function heading(rig, vx, vy, fallback, rate = 8) {
 }
 
 export function drawShadows(ctx, run) {
-  for (const e of run.enemies) castShadow(ctx, e.x, e.y, e.r * (e.boss ? 1.2 : 1), e.boss ? 2.2 : e.kind === 'spitbloom' ? 0.3 : 1);
+  for (const e of run.enemies) if (!e.veiled) castShadow(ctx, e.x, e.y, e.r * (e.boss ? 1.2 : 1), e.boss ? 2.2 : e.kind === 'spitbloom' ? 0.3 : 1);
   const p = run.player;
   if (!p.dead) castShadow(ctx, p.x, p.y, 16, 1.6);
 }
@@ -174,7 +175,7 @@ export function drawEnemy(ctx, e, t) {
   ctx.save();
   ctx.globalAlpha = Math.max(0.1, spawn);
   ctx.globalCompositeOperation = 'lighter';
-  if (!e.boss) drawGlow(ctx, e.x, e.y, e.r * (e.elite ? 3.6 : 2.5), e.elite ? '#ffd166' : e.color, e.elite ? 0.5 : 0.32);
+  if (!e.boss && !e.veiled) drawGlow(ctx, e.x, e.y, e.r * (e.elite ? 3.6 : 2.5), e.elite ? '#ffd166' : e.color, e.elite ? 0.5 : 0.32);
   ctx.globalCompositeOperation = 'source-over';
   const col = e.hitFlash > 0 ? mix(e.color, '#ffffff', 0.7) : e.color;
   // A hit squashes the body for a moment.
@@ -227,6 +228,71 @@ function tubeHighlight(ctx, pts, width, color) {
 }
 
 const DRAW = {
+  // Gloom Lurker: a shadow ray. Veiled, only a heat-haze ripple and its two eyes show (they flare
+  // before it strikes); revealed, its dark wings beat, edged in violet, ringed by the light that
+  // found it.
+  lurker(ctx, e, t, col, rig) {
+    const R = e.r;
+    const striking = e.state === 'aim' || e.state === 'lunge';
+    const head = striking ? e.lunge : heading(rig, e.vx, e.vy, e.face, 6);
+    const flap = Math.sin(t * 5 + e.phase);
+    ctx.save();
+    ctx.translate(e.x, e.y);
+    ctx.rotate(head);
+    if (e.veiled) {
+      ctx.globalAlpha = 0.22 + 0.08 * Math.sin(t * 3 + e.phase);
+      ctx.strokeStyle = '#cbb8ff';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([5, 7]);
+      ctx.lineDashOffset = -t * 20;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, R * 1.05, R * (1.35 + flap * 0.12), 0, 0, TAU);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    } else {
+      const reveal = Math.min(1, (4 - (e.revealT ?? 0)) * 4);
+      ctx.globalAlpha = reveal;
+      // Wings.
+      const g = ctx.createRadialGradient(R * 0.2, 0, R * 0.2, 0, 0, R * 1.6);
+      g.addColorStop(0, mix(col, '#2a1748', 0.3));
+      g.addColorStop(1, '#120a24');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.moveTo(R * 1.1, 0);
+      ctx.quadraticCurveTo(R * 0.2, -R * (1.5 + flap * 0.35), -R * 0.7, -R * (1.4 + flap * 0.4));
+      ctx.quadraticCurveTo(-R * 0.3, -R * 0.3, -R * 0.9, 0);
+      ctx.quadraticCurveTo(-R * 0.3, R * 0.3, -R * 0.7, R * (1.4 + flap * 0.4));
+      ctx.quadraticCurveTo(R * 0.2, R * (1.5 + flap * 0.35), R * 1.1, 0);
+      ctx.fill();
+      ctx.strokeStyle = withAlpha(col, 0.9);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      // Whip tail.
+      ctx.strokeStyle = withAlpha(col, 0.7);
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-R * 0.9, 0);
+      ctx.quadraticCurveTo(-R * 1.8, Math.sin(t * 4 + e.phase) * R * 0.5, -R * 2.5, Math.sin(t * 4 + e.phase + 1) * R * 0.3);
+      ctx.stroke();
+      // The light that found it, fading.
+      ctx.globalAlpha = Math.max(0, (e.revealT ?? 0) / 4) * 0.7;
+      ctx.strokeStyle = '#7ff6ff';
+      ctx.beginPath(); ctx.arc(0, 0, R * 1.8, 0, TAU); ctx.stroke();
+    }
+    // Eyes: always visible, flaring red before a strike.
+    ctx.globalAlpha = 1;
+    const ec = striking ? '#ff4d6d' : '#e0d4ff';
+    for (const s of [-1, 1]) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      drawGlow(ctx, R * 0.55, s * R * 0.32, R * (striking ? 1.1 : e.veiled ? 0.9 : 0.55), ec, striking ? 0.95 : 0.8);
+      ctx.restore();
+      ctx.fillStyle = ec;
+      ctx.beginPath(); ctx.ellipse(R * 0.55, s * R * 0.32, R * 0.2, R * 0.11, s * 0.3, 0, TAU); ctx.fill();
+    }
+    ctx.restore();
+  },
+
   whorl(ctx, e, t, col, rig) {
     const R = e.r;
     const rot = e.t * 0.5 + e.phase;

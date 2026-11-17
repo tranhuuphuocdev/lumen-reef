@@ -71,6 +71,8 @@ function sonarHit(run, w, e, d) {
   const a = Math.atan2(e.y - w.y, e.x - w.x);
   const falloff = 1 - Math.min(0.6, d / w.max * 0.6);
   let broke = null;
+  if (e.veiled) { e.veiled = false; e.untargetable = false; e.revealT = 4; broke = 'REVEALED'; }
+  else if (e.kind === 'lurker') e.revealT = 4;
   if (e.boss) {
     if (e.state === 'roar') return; // a phase change shrugs the wave off
     if (e.boss === 'nacre' && e.state === 'closed') { e.invuln = false; e.forcedOpen = 2.5; broke = 'SHELL CRACKED'; }

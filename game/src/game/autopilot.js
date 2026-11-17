@@ -54,7 +54,7 @@ export function autopilot(run) {
     aimY: nearest ? nearest.y + (nearest.vy ?? 0) * lead : p.y + Math.sin(p.aim) * 100,
     fire: !!nearest && nd < 760,
     dash: threat > 1.3,
-    pulse: threat > 1.6 || (run.wave.boss && !run.wave.boss.dead && p.pulse >= 100),
+    pulse: threat > 1.6 || (run.wave.boss && !run.wave.boss.dead && p.pulse >= 100) || run.enemies.some((e) => e.veiled && Math.hypot(e.x - p.x, e.y - p.y) < 260),
   };
 }
 
