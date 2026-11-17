@@ -7,16 +7,17 @@ import { MUTATION_BY_ID, RARITY } from '../game/upgrades.js';
 import { text, panel, keycap } from './widgets.js';
 import { drawMutationIcon } from './icons.js';
 import { withAlpha } from '../render/glow.js';
+import { ASPECTS, MUTATION_ASPECT } from '../game/attributes.js';
 
 export function drawLevelUp(ctx, run, ui, t) {
   ctx.fillStyle = 'rgba(2, 10, 24, 0.66)';
   ctx.fillRect(0, 0, VIEW.w, VIEW.h);
   const age = ui.levelAge ?? 1;
   text(ctx, `LEVEL ${run.level - run.pendingLevels + 1}`, VIEW.w / 2, 132, { size: 52, weight: 900, align: 'center', color: '#ffe27a', glow: '#ffe27a', spacing: 6 });
-  text(ctx, 'THE GLIM CHANGES YOU — CHOOSE A MUTATION', VIEW.w / 2, 170, { size: 17, weight: 800, align: 'center', color: '#cfefff', spacing: 3 });
+  text(ctx, 'CHOOSE A MUTATION · each one grows an Aspect · click or press 1 2 3', VIEW.w / 2, 170, { size: 17, weight: 800, align: 'center', color: '#cfefff', spacing: 3 });
 
   const ids = run.choices ?? [];
-  const cw = 280, ch = 330, gap = 34;
+  const cw = 280, ch = 318, gap = 34;
   const x0 = VIEW.w / 2 - (cw * ids.length + gap * (ids.length - 1)) / 2;
   ids.forEach((id, i) => {
     const m = MUTATION_BY_ID[id];
@@ -51,9 +52,21 @@ export function drawLevelUp(ctx, run, ui, t) {
     }
     text(ctx, lvl ? `GROWTH ${lvl} → ${lvl + 1}` : 'NEW', x + cw / 2, yy + 308, { size: 12, weight: 800, align: 'center', color: '#9cc0d4', stroke: false, spacing: 2 });
     keycap(ctx, String(i + 1), x + 14, yy + 32, { size: 13 });
+    // The Aspect this card grows, and the evolution it brings closer.
+    const asp = ASPECTS[MUTATION_ASPECT[id]];
+    if (asp) {
+      const now = run.aspects[asp.id];
+      const next = asp.forms.find((f) => f.at > now);
+      const tag = next ? (next.at === now + 1 ? `EVOLVES: ${next.name.toUpperCase()}!` : `${now + 1}/${next.at} → ${next.name}`) : 'mastered';
+      ctx.fillStyle = withAlpha(asp.color, next && next.at === now + 1 ? 0.35 : 0.16);
+      ctx.beginPath();
+      ctx.roundRect(x + 16, yy + ch + 10, cw - 32, 46, 10);
+      ctx.fill();
+      text(ctx, `+1 ${asp.name}`, x + cw / 2, yy + ch + 29, { size: 15, weight: 900, align: 'center', color: asp.color, stroke: false, spacing: 1 });
+      text(ctx, tag, x + cw / 2, yy + ch + 47, { size: 12, weight: 800, align: 'center', color: next && next.at === now + 1 ? '#ffffff' : '#cfefff', stroke: false });
+    }
     ctx.restore();
   });
-  text(ctx, 'click a card or press 1 · 2 · 3', VIEW.w / 2, 600, { size: 14, weight: 700, align: 'center', color: '#7fa6c0', stroke: false, spacing: 2 });
 }
 
 function wrap(ctx, str, cx, y, maxW, lh) {

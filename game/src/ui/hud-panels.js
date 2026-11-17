@@ -11,6 +11,7 @@ import { MUTATION_BY_ID, RARITY } from '../game/upgrades.js';
 import { text, panel, bar, keycap } from './widgets.js';
 import { drawMutationIcon } from './icons.js';
 import { withAlpha } from '../render/glow.js';
+import { ASPECTS, ASPECT_ORDER, formName, isLastLight } from '../game/attributes.js';
 
 const TACTIC = {
   whorl: 'swarms', eel: 'lunges', blowfin: 'bursts', spitbloom: 'spits spores',
@@ -189,4 +190,53 @@ export function drawControlsAndKeys(ctx, ui) {
     text(ctx, label, bx + 33, VIEW.h - 19, { size: 11, weight: 900, align: 'center', color: '#cfefff', stroke: false, spacing: 1 });
     bx += 74;
   }
+}
+
+// Pip's status sheet: form, the four Aspects with their evolution marks, live combat stats and
+// the mutations that built them.
+export function drawStatus(ctx, run, x, y, t) {
+  const p = run.player;
+  const s = p.stats;
+  const w = 250, h = 236;
+  const last = isLastLight(run);
+  panel(ctx, x, y, w, h, { alpha: 0.76, border: last ? 0.9 : 0.4, color: last ? '#ff6f9c' : '#7ff6ff' });
+  text(ctx, 'PIP', x + 14, y + 24, { size: 13, weight: 900, color: '#9cd8ea', stroke: false, spacing: 2 });
+  text(ctx, formName(run).toUpperCase(), x + 46, y + 24, { size: 14, weight: 900, color: '#ffffff', stroke: false, spacing: 1 });
+  text(ctx, `LV ${run.level}`, x + w - 14, y + 24, { size: 13, weight: 900, align: 'right', color: '#ffe27a', stroke: false });
+  // Aspects: 9 cells each, with the evolution thresholds marked.
+  ASPECT_ORDER.forEach((id, i) => {
+    const a = ASPECTS[id];
+    const v = run.aspects[id];
+    const ry = y + 46 + i * 21;
+    text(ctx, a.name, x + 14, ry + 4, { size: 12, weight: 900, color: a.color, stroke: false, spacing: 1 });
+    for (let k = 0; k < 9; k++) {
+      const cx = x + 104 + k * 13;
+      ctx.fillStyle = k < v ? a.color : 'rgba(255,255,255,0.12)';
+      ctx.fillRect(cx, ry - 6, 10, 10);
+      if (k === 2 || k === 5) { ctx.strokeStyle = withAlpha(a.color, 0.9); ctx.lineWidth = 1.5; ctx.strokeRect(cx - 1, ry - 7, 12, 12); }
+    }
+    text(ctx, `${v}`, x + w - 14, ry + 4, { size: 13, weight: 900, align: 'right', color: '#ffffff', stroke: false });
+  });
+  // Live stats.
+  const dmg = s.damage * (last ? 1.5 : 1);
+  const stats = [
+    ['DMG', dmg.toFixed(0)], ['FIRE', `${(s.fireRate * (p.surge > 0 ? 1.6 : 1)).toFixed(1)}/s`],
+    ['SPEED', s.speed.toFixed(0)], ['CRIT', `${Math.round(s.crit * 100)}%`],
+    ['PULSE', `${Math.round(s.pulseRadius)}px`], ['DASH', `${s.dashCooldown.toFixed(2)}s${s.dashCharges > 1 ? ' ×2' : ''}`],
+  ];
+  stats.forEach(([k, v], i) => {
+    const cx = x + 14 + (i % 2) * 118, cy = y + 140 + Math.floor(i / 2) * 18;
+    text(ctx, k, cx, cy, { size: 11, weight: 900, color: '#7fa6c0', stroke: false, spacing: 1 });
+    text(ctx, v, cx + 104, cy, { size: 13, weight: 900, align: 'right', color: '#e6fbff', stroke: false });
+  });
+  // Mutations as a row of glyphs with their growth.
+  const ids = Object.keys(run.mutations);
+  ids.slice(0, 11).forEach((id, i) => {
+    const cx = x + 22 + i * 21, cy = y + 210;
+    drawMutationIcon(ctx, id, cx, cy, 9);
+    const l = run.mutations[id];
+    if (l > 1) text(ctx, `${l}`, cx + 7, cy + 10, { size: 9, weight: 900, align: 'center', color: '#ffffff' });
+  });
+  if (!ids.length) text(ctx, 'level up to grow a mutation', x + 14, y + 214, { size: 12, weight: 600, color: '#9cc0d4', stroke: false });
+  if (last) text(ctx, 'LAST LIGHT · DMG ×1.5 · PULSE ×2', x + w / 2, y + h + 18, { size: 13, weight: 900, align: 'center', color: '#ff6f9c', glow: '#ff6f9c', alpha: 0.75 + 0.25 * Math.sin(t * 8), spacing: 1 });
 }

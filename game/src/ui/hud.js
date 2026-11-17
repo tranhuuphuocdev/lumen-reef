@@ -9,15 +9,16 @@ import { formatScore } from '../core/math.js';
 import { text, panel, bar } from './widgets.js';
 import { drawHeart } from '../render/projectiles.js';
 import { withAlpha } from '../render/glow.js';
-import { drawObjectives, drawTideTrack, drawIncoming, drawBuild, drawAbilityBar, drawControlsAndKeys } from './hud-panels.js';
+import { drawObjectives, drawTideTrack, drawIncoming, drawStatus, drawAbilityBar, drawControlsAndKeys } from './hud-panels.js';
 import { BOSS_PHASES } from '../game/bosses.js';
+import { routeOf } from '../game/tides.js';
 
 export function drawHud(ctx, run, ui, t) {
   const p = run.player;
   drawShells(ctx, run, ui, t);
   drawTideHeader(ctx, run);
   drawScorePanel(ctx, run, ui);
-  drawBuild(ctx, run, 18, 92);
+  drawStatus(ctx, run, 18, 92, t);
   drawIncoming(ctx, run, VIEW.w - 268, 150);
   drawAbilityBar(ctx, run, ui, t);
   drawControlsAndKeys(ctx, ui);
@@ -63,7 +64,9 @@ function drawTideHeader(ctx, run) {
   const w = run.wave;
   const cx = VIEW.w / 2;
   text(ctx, `TIDE ${w.n} / ${WAVES_TOTAL}`, cx, 32, { size: 24, weight: 900, align: 'center', color: '#ffffff', spacing: 3 });
-  text(ctx, (w.name ?? '').toUpperCase(), cx, 51, { size: 12, weight: 800, align: 'center', color: '#9cd8ea', spacing: 3 });
+  const route = routeOf(run);
+  const label = route.id === 'slack' ? (w.name ?? '').toUpperCase() : `${(w.name ?? '').toUpperCase()} · ${route.name.toUpperCase()} ${route.reward.split(':')[0]}`;
+  text(ctx, label, cx, 51, { size: 12, weight: 800, align: 'center', color: route.id === 'slack' ? '#9cd8ea' : route.color, spacing: 2 });
   drawTideTrack(ctx, run, 64);
   drawObjectives(ctx, run, 76);
 }

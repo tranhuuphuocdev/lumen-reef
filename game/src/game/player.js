@@ -8,6 +8,7 @@ import { fireVolley } from './weapons.js';
 import { burst, bubbles, ring, shake, flash } from './effects.js';
 import { damageEnemy } from './combat.js';
 import { releaseSonar } from './sonar.js';
+import { isLastLight } from './attributes.js';
 
 export function updatePlayer(run, ctl, dt) {
   const p = run.player;
@@ -23,7 +24,15 @@ export function updatePlayer(run, ctl, dt) {
   p.aim = Math.atan2(ctl.aimY - p.y, ctl.aimX - p.x);
 
   // Dash: a burst along the move direction (or the aim when standing still).
-  if (ctl.dash && p.dashCd <= 0 && p.dashT <= 0) {
+  // Maelstrom Fins: a second dash charge that refills on the cooldown.
+  if (s.dashCharges > 1 && p.dashStock < s.dashCharges - 1) {
+    p.stockT += dt;
+    if (p.stockT >= s.dashCooldown) { p.stockT = 0; p.dashStock += 1; }
+  }
+  const canDash = p.dashCd <= 0 || p.dashStock > 0;
+  if (ctl.dash && canDash && p.dashT <= 0) {
+    if (p.dashCd > 0) p.dashStock -= 1;
+    p.dashId += 1;
     const mx = ctl.move.x, my = ctl.move.y;
     const has = mx || my;
     p.dashDir = has ? { x: mx, y: my } : { x: Math.cos(p.aim), y: Math.sin(p.aim) };
@@ -37,6 +46,17 @@ export function updatePlayer(run, ctl, dt) {
 
   if (p.dashT > 0) {
     p.dashT -= dt;
+    // Riptail: the dash itself slashes every foe it passes through, once per dash.
+    if (s.riptail) {
+      for (const e of run.enemies) {
+        if (e.dead || e.riptailDash === p.dashId) continue;
+        if ((e.x - p.x) ** 2 + (e.y - p.y) ** 2 < (e.r + 26) ** 2) {
+          e.riptailDash = p.dashId;
+          damageEnemy(run, e, s.damage * 2, { x: p.x, y: p.y, knock: 200 });
+          burst(run, e.x, e.y, '#4dffc3', 10, 220, 0.4, 3);
+        }
+      }
+    }
     p.vx = p.dashDir.x * PLAYER.dashSpeed;
     p.vy = p.dashDir.y * PLAYER.dashSpeed;
     if (s.ink > 0 && p.inkCd <= 0) {
@@ -90,6 +110,6 @@ export function releasePulse(run) {
 export function chargePulse(run, amount) {
   const p = run.player;
   const before = p.pulse;
-  p.pulse = Math.min(PLAYER.pulseCharge, p.pulse + amount * p.stats.pulseRate);
+  p.pulse = Math.min(PLAYER.pulseCharge, p.pulse + amount * p.stats.pulseRate * (isLastLight(run) ? 2 : 1));
   if (before < PLAYER.pulseCharge && p.pulse >= PLAYER.pulseCharge) emit(run, 'pulseReady');
 }

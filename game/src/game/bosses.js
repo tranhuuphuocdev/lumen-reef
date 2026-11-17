@@ -11,8 +11,8 @@ import { spawnEnemy } from './enemies.js';
 import { burst, ring, shake, floatText } from './effects.js';
 
 export const BOSS_INFO = {
-  maw: { name: 'THE UNDERTOW MAW', title: 'Leviathan of the Second Shelf', color: '#ff5c8a', r: 66, hp: 1700, score: 2500, glim: 40 },
-  nacre: { name: 'QUEEN NACRE', title: 'Mother of the Pearl Abyss', color: '#ffe3a3', r: 78, hp: 4200, score: 6000, glim: 60 },
+  maw: { name: 'THE UNDERTOW MAW', title: 'Leviathan of the Second Shelf', color: '#ff5c8a', r: 66, hp: 2100, score: 2500, glim: 40 },
+  nacre: { name: 'QUEEN NACRE', title: 'Mother of the Pearl Abyss', color: '#ffe3a3', r: 78, hp: 5600, score: 6000, glim: 60 },
 };
 
 export function spawnBoss(run, id) {

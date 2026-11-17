@@ -8,6 +8,8 @@ import { orbitPositions, nearestEnemy } from './weapons.js';
 import { dropGlim, dropHeart } from './pickups.js';
 import { chargePulse } from './player.js';
 import { checkPerfectDodge } from './reflexes.js';
+import { routeMods } from './tides.js';
+import { isLastLight } from './attributes.js';
 
 export function damageEnemy(run, e, amount, src = {}) {
   if (e.dead || e.invuln) {
@@ -18,6 +20,8 @@ export function damageEnemy(run, e, amount, src = {}) {
   let dmg = amount;
   let crit = false;
   if (!src.noCrit && run.rng.chance(s.crit)) { dmg *= 2; crit = true; }
+  // LAST LIGHT: on the final shell Pip hits half again as hard.
+  if (isLastLight(run)) dmg *= 1.5;
   // An exposed boss takes heavy damage at its weak point.
   if (e.exposed > 0) { dmg *= 2.2; crit = true; }
   e.hp -= dmg;
@@ -32,7 +36,9 @@ export function damageEnemy(run, e, amount, src = {}) {
     damageText(run, e, dmg, crit);
     emit(run, 'hit');
   }
-  if (src.venom && s.venom > 0) { e.poison = 3; e.poisonDps = 6 + s.venom * 6; }
+  if (src.venom && s.venom > 0) { e.poison = 3; e.poisonDps = Math.max(e.poisonDps ?? 0, 6 + s.venom * 6); }
+  // Sunbell: bolts set foes burning.
+  if (src.venom && s.burn) { e.poison = 3; e.burning = true; e.poisonDps = Math.max(e.poisonDps ?? 0, s.damage * 0.7); }
   if (e.hp <= 0) killEnemy(run, e);
   return true;
 }
@@ -45,7 +51,8 @@ export function killEnemy(run, e) {
   run.comboT = COMBO.window;
   run.bestCombo = Math.max(run.bestCombo, run.combo);
   run.mult = Math.min(COMBO.maxMult, 1 + Math.floor(run.combo / COMBO.killsPerStep));
-  const pts = Math.round(e.score * run.mult * run.diff.score);
+  const mods = routeMods(run);
+  const pts = Math.round(e.score * run.mult * run.diff.score * mods.score);
   run.score += pts;
   floatText(run, e.x, e.y - 8, `+${pts}`, run.mult > 1 ? '#ffd166' : '#bff9ff', e.boss ? 30 : 16);
   burst(run, e.x, e.y, e.color, e.boss ? 80 : 14 + Math.round(e.r / 2), e.boss ? 420 : 200, e.boss ? 1.4 : 0.6, e.boss ? 6 : 3);
@@ -61,7 +68,7 @@ export function killEnemy(run, e) {
     run.fx.bossDeath = { x: e.x, y: e.y, t: 0, color: e.color, r: e.r };
   } else if (e.elite) { shake(run, 5); run.fx.hitstop = Math.max(run.fx.hitstop, 0.04); }
   else shake(run, 1.5);
-  dropGlim(run, e.x, e.y, e.glim);
+  dropGlim(run, e.x, e.y, e.glim * mods.glim);
   if (e.elite || (run.player.hp < run.player.stats.maxHp && run.rng.chance(e.heartChance ?? 0.012))) dropHeart(run, e.x, e.y);
   chargePulse(run, e.boss ? 100 : e.elite ? 18 : 4 + e.r * 0.12);
   if (e.onDeath) e.onDeath(run, e);
@@ -91,10 +98,19 @@ export function hurtPlayer(run, amount, fromX, fromY) {
   p.vx += Math.cos(a) * 380;
   p.vy += Math.sin(a) * 380;
   emit(run, 'hurt');
+  // Thorn Plate: a hit bursts spines into every foe close by.
+  if (p.stats.thorns) {
+    ring(run, p.x, p.y, '#ff8fb3', 170, 0.4, 6);
+    for (const e of run.enemies) if (!e.dead && Math.hypot(e.x - p.x, e.y - p.y) < 170 + e.r) damageEnemy(run, e, p.stats.damage * 3, { x: p.x, y: p.y, knock: 260, noCrit: true });
+  }
   shake(run, 12);
   flash(run, 0.35, '#ff4d6d');
   burst(run, p.x, p.y, '#ff6f9c', 22, 240, 0.6, 3);
   floatText(run, p.x, p.y - 30, `-${dmg}`, '#ff6f9c', 22);
+  if (p.hp > 0 && isLastLight(run)) {
+    emit(run, 'lastLight');
+    floatText(run, p.x, p.y - 50, 'LAST LIGHT', '#ff6f9c', 26);
+  }
   if (p.hp <= 0) {
     p.hp = 0;
     p.dead = true;

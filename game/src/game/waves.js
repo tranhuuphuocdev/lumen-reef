@@ -9,6 +9,7 @@ import { spawnBoss } from './bosses.js';
 import { magnetiseAll } from './pickups.js';
 import { floatText } from './effects.js';
 import { layoutCurrents } from './currents.js';
+import { drawRoutes, routeMods, autoRoute, ROUTES } from './tides.js';
 
 export const WAVE_PLANS = {
   1: { whorl: 16, flicker: 6 },
@@ -32,7 +33,7 @@ function buildQueue(run, n) {
   const plan = WAVE_PLANS[n];
   const q = [];
   for (const [kind, count] of Object.entries(plan)) {
-    const c = Math.round(count * run.diff.count);
+    const c = Math.round(count * run.diff.count * routeMods(run).count);
     for (let i = 0; i < c; i++) q.push(kind);
   }
   for (let i = q.length - 1; i > 0; i--) {
@@ -46,6 +47,7 @@ function buildQueue(run, n) {
 
 export function startWave(run, n) {
   const w = run.wave;
+  if (n === 1) run.route = 'slack';
   w.n = n;
   w.phase = 'intro';
   w.timer = 2.4;
@@ -76,12 +78,13 @@ export function updateWaves(run, dt) {
     w.spawnCd -= dt;
     const bossAlive = w.boss && !w.boss.dead;
     if (w.spawnCd <= 0 && w.queue.length && run.enemies.length < cap) {
-      const group = Math.min(w.queue.length, 1 + Math.floor(run.rng.next() * (2 + n * 0.35)));
+      const mods = routeMods(run);
+      const group = Math.min(w.queue.length, Math.round((1 + Math.floor(run.rng.next() * (2 + n * 0.35))) * mods.group));
       const at = edgeSpawnPoint(run);
       for (let i = 0; i < group; i++) {
         const kind = w.queue.shift();
-        const elite = kind !== 'flicker' && run.rng.chance(0.015 + n * 0.012);
-        spawnEnemy(run, kind, at.x + run.rng.range(-50, 50), at.y + run.rng.range(-50, 50), { elite, hpScale: 1 + (n - 1) * 0.09 });
+        const elite = kind !== 'flicker' && run.rng.chance((0.015 + n * 0.012) * mods.elite);
+        spawnEnemy(run, kind, at.x + run.rng.range(-50, 50), at.y + run.rng.range(-50, 50), { elite, hpScale: (1 + (n - 1) * 0.13) * mods.hp, speedScale: mods.speed });
       }
       w.spawnCd = (bossAlive ? 3.2 : Math.max(0.4, 1.35 - n * 0.09)) * (0.7 + run.rng.next() * 0.6);
     }
@@ -111,7 +114,12 @@ export function updateWaves(run, dt) {
   }
   if (w.phase === 'clear') {
     w.timer -= dt;
-    if (w.timer <= 0) startWave(run, w.n + 1);
+    if (w.timer <= 0) {
+      // The player picks the next tide's route; the pilot (demo and screenshots) picks its own.
+      const choices = drawRoutes(run);
+      if (run.demo && !run.manualRoute) { run.route = autoRoute(run, choices); (run.routes ??= []).push(run.route); startWave(run, w.n + 1); }
+      else { w.phase = 'route'; run.routeChoices = choices; }
+    }
     return;
   }
   if (w.phase === 'won') {
@@ -125,4 +133,11 @@ export function waveProgress(run) {
   if (!w.total) return 0;
   const left = (w.queue?.length ?? 0) + run.enemies.filter((e) => !e.boss).length + (w.boss && !w.boss.dead ? 1 : 0);
   return 1 - Math.min(1, left / w.total);
+}
+
+export function chooseRoute(run, id) {
+  run.route = ROUTES[id] ? id : 'slack';
+  (run.routes ??= []).push(run.route);
+  run.routeChoices = null;
+  startWave(run, run.wave.n + 1);
 }

@@ -10,6 +10,7 @@ import { getRig, chain, blink } from './rigs.js';
 import { undulate, bodyPath, shadeBody, rimLight, eye, fin, tentacle, castShadow } from './anatomy.js';
 import { drawMaw, drawNacre, drawWeakPoint } from './boss-art.js';
 import { angleDiff } from '../core/math.js';
+import { drawFormsBehind, drawFormsOnBell, bellColors } from './pip-forms.js';
 
 const TAU = Math.PI * 2;
 const hash = (i) => { const s = Math.sin(i * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
@@ -71,6 +72,7 @@ export function drawPip(ctx, p, t, aim) {
   if (p.surge > 0) drawGlow(ctx, p.x, p.y, 58 + Math.sin(t * 14) * 6, '#ffd166', 0.55);
   ctx.globalCompositeOperation = 'source-over';
 
+  drawFormsBehind(ctx, p, rig, t, head, L, W);
   // Trailing tentacles and frilled oral arms hang on chains behind the bell margin.
   const back = head + Math.PI;
   for (let i = 0; i < 6; i++) {
@@ -106,9 +108,10 @@ export function drawPip(ctx, p, t, aim) {
   };
   bell();
   const g = ctx.createRadialGradient(L * 0.45, -W * 0.3, 1, L * 0.2, 0, R * 1.3);
+  const bc = bellColors(p, hurt);
   g.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-  g.addColorStop(0.35, withAlpha(tint, 0.7));
-  g.addColorStop(1, withAlpha(hurt ? '#ff4d7d' : '#1aa9cc', 0.45));
+  g.addColorStop(0.35, withAlpha(bc.mid, 0.72));
+  g.addColorStop(1, withAlpha(bc.edge, 0.5));
   ctx.fillStyle = g;
   ctx.fill();
   ctx.strokeStyle = 'rgba(235, 255, 255, 0.85)';
@@ -134,6 +137,7 @@ export function drawPip(ctx, p, t, aim) {
   ctx.beginPath();
   ctx.ellipse(L * 0.35, 0, L * 0.5, W * 0.72, 0, -1.25, -0.35);
   ctx.stroke();
+  drawFormsOnBell(ctx, p, t, L, W);
   // Two little eyes that follow the aim.
   const look = aim - head;
   const lid = blink(rig, t);

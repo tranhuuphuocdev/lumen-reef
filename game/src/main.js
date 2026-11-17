@@ -12,6 +12,8 @@ import { drawScene } from './render/scene-renderer.js';
 import { drawHud, drawCrosshair } from './ui/hud.js';
 import { drawTitle, DIFF_ORDER } from './ui/title-screen.js';
 import { drawLevelUp } from './ui/levelup-screen.js';
+import { drawRouteChoice } from './ui/route-screen.js';
+import { chooseRoute } from './game/waves.js';
 import { drawResults, drawPause } from './ui/results-screen.js';
 import { createInput } from './core/input.js';
 import { createAudio } from './core/audio.js';
@@ -136,6 +138,14 @@ function drainEvents() {
       case 'victory': audio.sfx.victory(); showBanner('VICTORY', 'THE ABYSS IS LIT', '#ffd166', true, 3); break;
       case 'playerDown': audio.sfx.defeat(); break;
       case 'perfect': audio.sfx.perfect(); break;
+      case 'evolve':
+        audio.sfx.victory();
+        showBanner(`EVOLVED: ${d.name.toUpperCase()}`, d.power.toUpperCase(), d.color, true, 3);
+        break;
+      case 'lastLight':
+        audio.sfx.bossPhase();
+        showBanner('LAST LIGHT', 'ONE SHELL LEFT · DAMAGE ×1.5 · PULSE CHARGES ×2', '#ff6f9c', false, 2.4);
+        break;
       case 'surge': audio.sfx.surge(); break;
       case 'interrupt': audio.sfx.interrupt(); break;
       case 'milestone': audio.sfx.milestone(); break;
@@ -197,7 +207,26 @@ function update(dt) {
         audio.sfx.levelUp();
       } else run.pendingLevels = 0;
     }
+    if (run.wave.phase === 'route' && ui.mode === 'play' && run.pendingLevels === 0) {
+      ui.mode = 'route';
+      ui.routeAge = 0;
+      audio.sfx.levelUp();
+    }
     if (run.outcome) finish();
+    return;
+  }
+
+  if (ui.mode === 'route') {
+    ui.routeAge += dt;
+    let pick = -1;
+    if (hit?.startsWith('route:')) pick = Number(hit.slice(6));
+    for (let i = 0; i < 3; i++) if (input.wasPressed(`Digit${i + 1}`, `Numpad${i + 1}`)) pick = i;
+    if (ui.routeAge < 0.35) pick = -1;
+    if (pick >= 0 && pick < (run.routeChoices?.length ?? 0)) {
+      chooseRoute(run, run.routeChoices[pick]);
+      audio.sfx.pick();
+      ui.mode = 'play';
+    }
     return;
   }
 
@@ -249,6 +278,7 @@ function render() {
   else {
     if (ui.mode !== 'results') drawHud(ctx, run, ui, clock);
     if (ui.mode === 'levelup') drawLevelUp(ctx, run, ui, clock);
+    if (ui.mode === 'route' && run.routeChoices) drawRouteChoice(ctx, run, ui, clock);
     if (ui.mode === 'paused') drawPause(ctx, run, ui);
     if (ui.mode === 'results') drawResults(ctx, run, ui, clock);
     if (ui.mode !== 'play') drawCrosshair(ctx, ui.mouse.x, ui.mouse.y, 0, clock);

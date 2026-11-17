@@ -5,10 +5,14 @@
 import { WORLD, DIFFICULTY, XP } from '../config.js';
 import { createRng } from '../core/rng.js';
 import { baseStats } from './upgrades.js';
+import { createAspects } from './attributes.js';
 
 export function createRun({ seed = Date.now() % 1e9, difficulty = 'rising', demo = false } = {}) {
   const stats = baseStats();
+  const aspects = createAspects();
   return {
+    aspects,
+    forms: [],
     seed,
     rng: createRng(seed),
     diff: DIFFICULTY[difficulty],
@@ -34,6 +38,10 @@ export function createRun({ seed = Date.now() % 1e9, difficulty = 'rising', demo
       regenT: 0,
       pulse: 0,
       surge: 0,
+      aspects,
+      dashStock: 0,
+      stockT: 0,
+      dashId: 0,
       sinceDash: 9,
       glimSincePulse: 0,
       casting: 0,

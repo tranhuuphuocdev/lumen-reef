@@ -6,6 +6,8 @@ import { formatScore, formatTime, easeOutCubic } from '../core/math.js';
 import { text, panel, button } from './widgets.js';
 import { drawMutationIcon } from './icons.js';
 import { MUTATION_BY_ID } from '../game/upgrades.js';
+import { ROUTES } from '../game/tides.js';
+import { ASPECTS, ASPECT_ORDER, formName } from '../game/attributes.js';
 
 export function rankFor(run) {
   const s = run.score / run.diff.score;
@@ -30,7 +32,7 @@ export function drawResults(ctx, run, ui, t) {
   const sub = won ? `Queen Nacre is beaten. ${run.diff.name} conquered.` : `Lost in ${run.wave.name ?? 'the deep'} — wave ${run.wave.n} of ${WAVES_TOTAL}.`;
   text(ctx, sub, VIEW.w / 2, 142, { size: 18, weight: 700, align: 'center', color: '#cfefff', alpha: k, spacing: 1 });
 
-  const pw = 760, ph = 330, px = (VIEW.w - pw) / 2, py = 172;
+  const pw = 760, ph = 352, px = (VIEW.w - pw) / 2, py = 168;
   ctx.save();
   ctx.globalAlpha = k;
   panel(ctx, px, py, pw, ph, { color: col, alpha: 0.88, radius: 20, border: 0.6 });
@@ -63,24 +65,64 @@ export function drawResults(ctx, run, ui, t) {
     text(ctx, val, cx, cy + 28, { size: 26, weight: 900, color: '#eafcff' });
   });
 
+  // The form Pip reached and the Aspects that built it.
+  text(ctx, 'FORM', px + 120, py + 214, { size: 12, weight: 900, align: 'center', color: '#7fa6c0', stroke: false, spacing: 3 });
+  text(ctx, formName(run).toUpperCase(), px + 120, py + 238, { size: 18, weight: 900, align: 'center', color: '#ffffff' });
+  ASPECT_ORDER.forEach((id, i) => {
+    const a = ASPECTS[id];
+    const v = run.aspects[id];
+    const ax = px + 36 + i * 178, ay = py + 290;
+    text(ctx, a.name, ax, ay, { size: 12, weight: 900, color: a.color, stroke: false, spacing: 1 });
+    text(ctx, `${v}`, ax + 160, ay, { size: 13, weight: 900, align: 'right', color: '#ffffff', stroke: false });
+    for (let c = 0; c < 9; c++) {
+      ctx.fillStyle = c < v ? a.color : 'rgba(255,255,255,0.12)';
+      ctx.fillRect(ax + c * 17, ay + 8, 14, 8);
+    }
+  });
   // Mutations grown this dive.
   const ids = Object.keys(run.mutations);
-  text(ctx, 'MUTATIONS', px + 36, py + 268, { size: 12, weight: 900, color: '#7fa6c0', stroke: false, spacing: 2 });
-  ids.slice(0, 16).forEach((id, i) => {
-    const x = px + 50 + i * 42, y = py + 300;
-    drawMutationIcon(ctx, id, x, y, 16);
+  ids.slice(0, 18).forEach((id, i) => {
+    const x = px + 50 + i * 37, y = py + 330;
+    drawMutationIcon(ctx, id, x, y, 14);
     const l = run.mutations[id];
     if (l > 1) text(ctx, `${l}`, x + 12, y + 15, { size: 12, weight: 900, align: 'center', color: '#ffffff' });
   });
-  if (!ids.length) text(ctx, 'none — pure Pip', px + 36, py + 300, { size: 15, weight: 700, color: '#9cc0d4', stroke: false });
+  if (!ids.length) text(ctx, 'no mutations — pure Pip', px + 36, py + 334, { size: 15, weight: 700, color: '#9cc0d4', stroke: false });
   ctx.restore();
 
   if (age > 0.5) {
-    button(ui, ctx, 'restart', 'DIVE AGAIN', VIEW.w / 2 - 290, 548, 270, 58, { hot: true, size: 24, color: col, hint: 'press R or Enter' });
-    button(ui, ctx, 'title', 'CHANGE TIDE', VIEW.w / 2 + 20, 548, 270, 58, { size: 22, hint: 'press Esc for the title' });
+    button(ui, ctx, 'restart', 'DIVE AGAIN', VIEW.w / 2 - 290, 560, 270, 58, { hot: true, size: 24, color: col, hint: 'press R or Enter' });
+    button(ui, ctx, 'title', 'CHANGE TIDE', VIEW.w / 2 + 20, 560, 270, 58, { size: 22, hint: 'press Esc for the title' });
   }
-  const top = ids.map((id) => MUTATION_BY_ID[id].name).slice(0, 3).join(' · ');
-  if (top) text(ctx, `build: ${top}`, VIEW.w / 2, 660, { size: 13, weight: 700, align: 'center', color: '#7fa6c0', stroke: false, alpha: k });
+  // The currents chosen between tides, as coloured chips.
+  const routes = (run.routes ?? []).filter((r) => r !== 'slack');
+  if (routes.length) {
+    ctx.save();
+    ctx.globalAlpha = k;
+    ctx.font = '800 12px "Trebuchet MS", sans-serif';
+    const chips = routes.slice(-7).map((id) => ({ r: ROUTES[id], w: ctx.measureText(ROUTES[id].name.toUpperCase()).width + 20 }));
+    const label = 'CURRENTS CHOSEN';
+    const lw = 150;
+    const total = chips.reduce((t, c) => t + c.w + 6, 0) + lw;
+    let x = VIEW.w / 2 - total / 2;
+    text(ctx, label, x, 664, { size: 12, weight: 900, color: '#7fa6c0', stroke: false, spacing: 2 });
+    x += lw;
+    for (const c of chips) {
+      ctx.fillStyle = 'rgba(3, 14, 30, 0.8)';
+      ctx.strokeStyle = c.r.color;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(x, 648, c.w, 22, 11);
+      ctx.fill();
+      ctx.stroke();
+      text(ctx, c.r.name.toUpperCase(), x + c.w / 2, 664, { size: 12, weight: 800, align: 'center', color: c.r.color, stroke: false });
+      x += c.w + 6;
+    }
+    ctx.restore();
+  } else {
+    const top = ids.map((id) => MUTATION_BY_ID[id].name).slice(0, 3).join(' · ');
+    if (top) text(ctx, `build: ${top}`, VIEW.w / 2, 660, { size: 13, weight: 700, align: 'center', color: '#7fa6c0', stroke: false, alpha: k });
+  }
 }
 
 export function drawPause(ctx, run, ui) {

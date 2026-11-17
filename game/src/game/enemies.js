@@ -20,7 +20,7 @@ export const ENEMY_KINDS = {
   broodbell: { name: 'Broodbell', r: 24, hp: 80, speed: 55, score: 35, glim: 4, color: '#c58bff', contact: 1 },
 };
 
-export function spawnEnemy(run, kind, x, y, { elite = false, hpScale = 1 } = {}) {
+export function spawnEnemy(run, kind, x, y, { elite = false, hpScale = 1, speedScale = 1 } = {}) {
   const k = ENEMY_KINDS[kind];
   const d = run.diff;
   const scale = elite ? 1.4 : 1;
@@ -32,7 +32,7 @@ export function spawnEnemy(run, kind, x, y, { elite = false, hpScale = 1 } = {})
     vx: 0, vy: 0, kx: 0, ky: 0,
     r: k.r * scale,
     hp, maxHp: hp,
-    speed: k.speed * d.speed * (elite ? 0.92 : 1),
+    speed: k.speed * d.speed * speedScale * (elite ? 0.92 : 1),
     score: k.score * (elite ? 4 : 1),
     glim: k.glim * (elite ? 4 : 1),
     color: k.color,

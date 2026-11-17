@@ -20,7 +20,9 @@ export function releaseSonar(run) {
   p.pulse = 0;
   p.glimSincePulse = 0;
   p.casting = 0.35;
-  run.sonar.push({ x: p.x, y: p.y, r: 0, max: R, speed: R / 0.5, hit: new Set(), charged });
+  run.sonar.push({ x: p.x, y: p.y, r: 0, max: R, speed: R / 0.5, hit: new Set(), charged, power: 1 });
+  // Echo Bell: a second, smaller wave follows from the same spot.
+  if (s.echo) run.sonar.push({ x: p.x, y: p.y, r: 0, max: R * 0.8, speed: R / 0.5, hit: new Set(), charged, power: 0.6, delay: 0.42, echo: true });
   emit(run, 'pulse');
   shake(run, 9);
   flash(run, 0.3, '#7ff6ff');
@@ -31,6 +33,7 @@ export function releaseSonar(run) {
 export function updateSonar(run, dt) {
   for (let i = run.sonar.length - 1; i >= 0; i--) {
     const w = run.sonar[i];
+    if (w.delay > 0) { w.delay -= dt; continue; }
     w.r = Math.min(w.max, w.r + w.speed * dt);
     const r2hi = (w.r + 12) ** 2;
     // Shots inside the front dissolve into sparks.
@@ -50,7 +53,16 @@ export function updateSonar(run, dt) {
       w.hit.add(e.id);
       sonarHit(run, w, e, d);
     }
-    if (w.r >= w.max) run.sonar.splice(i, 1);
+    if (w.r >= w.max) {
+      // Choir of the Deep: a wave that touched six or more foes regrows a shell.
+      const p = run.player;
+      if (p.stats.choir && !w.echo && w.hit.size >= 6 && p.hp < p.stats.maxHp) {
+        p.hp += 1;
+        floatText(run, p.x, p.y - 40, 'CHOIR +1 SHELL', '#5ff0ff', 20);
+        emit(run, 'heart');
+      }
+      run.sonar.splice(i, 1);
+    }
   }
 }
 
@@ -76,7 +88,7 @@ function sonarHit(run, w, e, d) {
     e.ky += Math.sin(a) * 520 * falloff;
     e.stun = Math.max(e.stun, 1.3);
   }
-  const dmg = PLAYER.pulseDamage * (p.stats.damage / PLAYER.bulletDamage) ** 0.6 * falloff * (1 + (p.stats.sonarDmg ?? 0));
+  const dmg = PLAYER.pulseDamage * (p.stats.damage / PLAYER.bulletDamage) ** 0.6 * falloff * (1 + (p.stats.sonarDmg ?? 0)) * (w.power ?? 1);
   damageEnemy(run, e, dmg, { x: w.x, y: w.y, knock: 0 });
   if (broke) {
     floatText(run, e.x, e.y - e.r - 18, broke, '#7ff6ff', e.boss ? 26 : 16);

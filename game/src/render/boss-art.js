@@ -218,7 +218,7 @@ export function drawNacre(ctx, e, t, rig) {
   ctx.translate(e.x, e.y);
   ctx.rotate(Math.sin(t * 0.6) * 0.08);
   ctx.globalCompositeOperation = 'lighter';
-  drawGlow(ctx, 0, 0, R * 2.2, '#ffe3a3', closed ? 0.2 : 0.35);
+  drawGlow(ctx, 0, 0, R * 2.2, '#ffe3a3', closed ? 0.08 : 0.14);
   ctx.globalCompositeOperation = 'source-over';
 
   // Lower valve (seen through the gape), then the mantle frill with its eyes, then upper valve.
@@ -238,8 +238,8 @@ export function drawNacre(ctx, e, t, rig) {
     ctx.fill();
     // The great pearl.
     ctx.globalCompositeOperation = 'lighter';
-    drawGlow(ctx, 0, R * 0.1, R * 1.1, '#fff3d0', 0.9);
-    drawGlow(ctx, 0, R * 0.1, R * 0.7, '#b9f3ff', 0.5);
+    drawGlow(ctx, 0, R * 0.1, R * 0.8, '#fff3d0', 0.45);
+    drawGlow(ctx, 0, R * 0.1, R * 0.5, '#b9f3ff', 0.3);
     ctx.globalCompositeOperation = 'source-over';
     const pg = ctx.createRadialGradient(-R * 0.1, 0, 2, 0, R * 0.1, R * 0.3);
     pg.addColorStop(0, '#ffffff');
@@ -307,7 +307,7 @@ function valve(ctx, R, side, e, t) {
   ctx.lineTo(-R * 0.45, R * 0.42);
   ctx.closePath();
   const cg = ctx.createConicGradient(t * 0.2, 0, R * 0.3);
-  const sheen = hurt ? ['#ffffff', '#ffe0e8', '#ffffff'] : ['#fff1d6', '#f7c6d9', '#c9e6ff', '#e6d3ff', '#fff1d6'];
+  const sheen = hurt ? ['#fff4f8', '#ffd0dc', '#fff4f8'] : ['#e9cfa8', '#d99ab4', '#9cc4e6', '#b9a2e0', '#e9cfa8'];
   sheen.forEach((c, i) => cg.addColorStop(i / (sheen.length - 1), c));
   ctx.fillStyle = cg;
   ctx.fill();

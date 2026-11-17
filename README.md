@@ -10,6 +10,8 @@ mutations, and beat two bosses: the Undertow Maw and Queen Nacre.
 
 ![Boss fight](screenshots/1-boss-fight.jpg)
 
+![Evolving through a mutation](screenshots/3-evolve.jpg)
+
 ## How it plays
 
 - **Swim, aim, fire, dash.** WASD to swim, mouse to aim, hold the left button to fire, Space or
@@ -24,6 +26,18 @@ mutations, and beat two bosses: the Undertow Maw and Queen Nacre.
   things toward their eye. Ride them to get away; aim with them in mind.
 - **Chains.** Kill without being hit and your multiplier climbs to x8. Every 25-kill chain starts a
   Surge.
+- **Aspects and evolution.** Every mutation grows one of Pip's four Aspects: RADIANCE (damage),
+  CURRENT (speed and dash), RESONANCE (the pulse) or CARAPACE (shells). Each point is a permanent
+  bonus, and 3 and 6 points evolve Pip into a new form with a new power and a new look: Sunbell
+  (burning bolts), Solar Crown (piercing sunlances), Riptail (dash slashes), Maelstrom Fins (two
+  dashes), Echo Bell (a second pulse wave), Choir of the Deep (pulses regrow shells), Nacre Bell
+  (a regrowing bubble) and Thorn Plate (hits burst spines). The reef offers more of what you lean
+  on, plus one wild card, so each run builds in the direction you steer it. The status panel shows
+  the form, the Aspects and the live stats.
+- **Tide routes.** Between tides you choose the next current: Slack Water (safe), Riptide, Teeming
+  Shoal, Gilded Brood, Glimstorm or Red Bloom, each trading danger for score or glim.
+- **Last Light.** On your final shell Pip burns brighter: damage ×1.5 and the pulse charges twice
+  as fast.
 - **Mutations.** Each level offers three of 23 mutations: split shots, piercing, ricochet,
   orbiting pearls, chain lightning, ink trails, a bubble ward and more, with synergies such as
   Static Wake (pulse right after a dash: lightning) and Glim Lens (glim widens your next pulse).

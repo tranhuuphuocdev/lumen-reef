@@ -15,6 +15,15 @@ export function fireVolley(run) {
     const off = n === 1 ? 0 : (i - (n - 1) / 2) * spread;
     spawnBolt(run, p.aim + off + run.rng.range(-0.025, 0.025));
   }
+  // Solar Crown: every fifth volley adds a heavy lance that pierces everything.
+  if (s.lance && p.shotCount % 5 === 0) {
+    spawnBolt(run, p.aim, 2.2);
+    const b = run.bullets[run.bullets.length - 1];
+    b.pierce = 99;
+    b.r *= 1.7;
+    b.lance = true;
+    b.life *= 1.3;
+  }
   if (s.nova > 0 && p.shotCount % Math.max(4, 9 - s.nova * 2) === 0) {
     const k = 10 + s.nova * 4;
     for (let i = 0; i < k; i++) spawnBolt(run, p.aim + (i / k) * Math.PI * 2, 0.7);
@@ -119,5 +128,6 @@ export function nearestEnemy(run, x, y, maxDist = Infinity, exclude = null) {
 }
 
 export function enemyShot(run, x, y, angle, speed, opts = {}) {
+  if (run.route === 'redbloom') speed *= 1.2;
   run.enemyShots.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, r: opts.r ?? 7, life: opts.life ?? 5, color: opts.color ?? '#ff7aa8', accel: opts.accel ?? 0, curve: opts.curve ?? 0 });
 }

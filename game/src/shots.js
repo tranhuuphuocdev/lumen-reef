@@ -46,13 +46,20 @@ export function stageShot(name, ui) {
 
   if (name === 'play') {
     const run = createRun({ seed: 90 + seed, demo: 'invincible' });
-    grow(run, ['split', 'split', 'pearls', 'pearls', 'static', 'quick', 'quick', 'dense', 'keen']);
-    run.level = 10;
+    grow(run, ['split', 'split', 'dense', 'dense', 'keen', 'bloom', 'pearls', 'static', 'deep', 'resonance', 'quick']);
+    run.level = 12;
     run.xpNext = 52;
     run.xp = 31;
     run.score = 16420;
     run.kills = 214;
-    startWave(run, 5);
+    const bossWave = Number(params.get('wave') ?? 5);
+    if (bossWave === 10) {
+      grow(run, ['split', 'pearls', 'static', 'quick', 'dense', 'ward', 'seeker', 'needle']);
+      run.level = 16;
+      run.score = 98760;
+      run.kills = 455;
+    }
+    startWave(run, bossWave);
     const pulseAt = Number(params.get('pulse') ?? 0);
     if (pulseAt > 0) {
       // Fight on, then press the Pulse key a moment before the frame, as a player would.
@@ -74,6 +81,21 @@ export function stageShot(name, ui) {
     const mx = b ? 640 + (b.x - run.camera.x) * ZOOM : 900;
     const my = b ? 360 + (b.y - run.camera.y) * ZOOM : 300;
     return { run, clock: run.time, mouse: { x: mx, y: my } };
+  }
+
+  if (name === 'route') {
+    const run = createRun({ seed: 700 + seed, demo: 'invincible' });
+    grow(run, ['split', 'quick', 'pearls', 'static']);
+    run.manualRoute = true;
+    startWave(run, 4);
+    // Fight the tide out until the route choice comes up, as it does in play.
+    for (let i = 0; i < 60 * 120 && run.wave.phase !== 'route'; i++) simulate(run, TICK);
+    run.routeChoices = ['slack', 'riptide', 'redbloom'];
+    run.wave.n = 4;
+    followCamera(run, 0, true);
+    ui.mode = 'route';
+    ui.routeAge = 2;
+    return { run, clock: run.time, mouse: { x: 1040, y: 540 } };
   }
 
   if (name === 'bestiary') {
@@ -110,13 +132,13 @@ export function stageShot(name, ui) {
 
   if (name === 'levelup') {
     const run = createRun({ seed: 300 + seed, demo: 'invincible' });
-    grow(run, ['split', 'quick', 'needle']);
+    grow(run, ['split', 'needle', 'pearls', 'quick']);
     startWave(run, 3);
     simulate(run, at || 14);
     run.level = 6;
     run.score += 4210;
     run.pendingLevels = 1;
-    run.choices = ['wake', 'pearls', 'reflex'];
+    run.choices = ['dense', 'static', 'reflex'];
     followCamera(run, 0, true);
     ui.mode = 'levelup';
     ui.levelAge = 2;

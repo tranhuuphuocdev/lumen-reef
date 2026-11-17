@@ -5,6 +5,7 @@
 import { WORLD } from '../config.js';
 import { MUTATIONS, applyMutation } from './upgrades.js';
 import { createRun } from './state.js';
+import { leadingAspect, MUTATION_ASPECT } from './attributes.js';
 import { startWave } from './waves.js';
 
 export function autopilot(run) {
@@ -59,6 +60,10 @@ export function autopilot(run) {
 
 // The pilot's pick at a level-up: favour damage-dealing mutations it has not maxed.
 export function autopilotChoice(run, choices) {
+  // Lean into one Aspect, like a player committing to a build.
+  const lead = leadingAspect(run);
+  const same = choices.find((id) => lead && MUTATION_ASPECT[id] === lead);
+  if (same && run.rng.chance(0.7)) return same;
   const pref = ['split', 'quick', 'dense', 'pearls', 'static', 'needle', 'seeker', 'ricochet', 'bell', 'nova', 'ward'];
   const sorted = [...choices].sort((a, b) => (pref.indexOf(a) + 99) % 99 - (pref.indexOf(b) + 99) % 99);
   return sorted[0] ?? MUTATIONS[0].id;

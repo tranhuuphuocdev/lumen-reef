@@ -3,6 +3,8 @@
 // ink trails, the bubble ward). drawChoices deals three distinct cards weighted by rarity.
 
 import { PLAYER } from '../config.js';
+import { MUTATION_ASPECT, investAspect, leadingAspect, ASPECTS } from './attributes.js';
+import { emit } from './state.js';
 
 export const RARITY = {
   common: { weight: 10, color: '#9cf7ff', label: 'COMMON' },
@@ -65,6 +67,13 @@ export function baseStats() {
     reflex: 0,
     sonarDmg: 0,
     dashCooldown: PLAYER.dashCooldown,
+    burn: 0,
+    lance: 0,
+    riptail: 0,
+    dashCharges: 1,
+    echo: 0,
+    choir: 0,
+    thorns: 0,
   };
 }
 
@@ -74,21 +83,36 @@ export function applyMutation(run, id) {
   m.apply(run.player.stats, run.player, lvl);
   run.mutations[id] = lvl + 1;
   if (id === 'ward') run.player.shield = run.player.stats.shieldMax;
+  // Every mutation also grows the Aspect it belongs to; enough points evolve Pip.
+  const aspect = MUTATION_ASPECT[id];
+  const form = aspect ? investAspect(run, aspect) : null;
+  if (form) emit(run, 'evolve', { aspect, name: form.name, power: form.power, color: ASPECTS[aspect].color });
+  return form;
 }
 
 export function drawChoices(run, count = 3) {
   const pool = MUTATIONS.filter((m) => (run.mutations[m.id] ?? 0) < m.max);
   const picks = [];
+  // The Aspect the build leans on is offered more often; the last card is always a different
+  // Aspect, so a build can still turn.
+  const lead = leadingAspect(run);
+  const weightOf = (m) => RARITY[m.rarity].weight * (lead && MUTATION_ASPECT[m.id] === lead ? 2.4 : 1);
   while (picks.length < count && pool.length) {
-    const total = pool.reduce((t, m) => t + RARITY[m.rarity].weight, 0);
+    let cands = pool;
+    if (picks.length === count - 1 && lead) {
+      const other = pool.filter((m) => MUTATION_ASPECT[m.id] !== lead);
+      if (other.length && picks.every((id) => MUTATION_ASPECT[id] === lead)) cands = other;
+    }
+    const total = cands.reduce((t, m) => t + weightOf(m), 0);
     let r = run.rng.next() * total;
     let i = 0;
-    for (; i < pool.length - 1; i++) {
-      r -= RARITY[pool[i].rarity].weight;
+    for (; i < cands.length - 1; i++) {
+      r -= weightOf(cands[i]);
       if (r <= 0) break;
     }
-    picks.push(pool[i].id);
-    pool.splice(i, 1);
+    const chosen = cands[i];
+    picks.push(chosen.id);
+    pool.splice(pool.indexOf(chosen), 1);
   }
   return picks;
 }

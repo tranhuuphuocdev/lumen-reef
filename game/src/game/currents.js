@@ -4,12 +4,14 @@
 // Pip faster; fighting one slows Pip down; shots bend as they cross.
 
 import { WORLD } from '../config.js';
+import { routeMods } from './tides.js';
 
 export function layoutCurrents(run, n) {
   run.currents = [];
-  if (n < 3 || n === 5 || n === 10) return;
+  if ((n < 3 || n === 5 || n === 10) && routeMods(run).current === 1) return;
   const rng = run.rng;
-  const streams = n >= 7 ? 2 : 1;
+  const strong = routeMods(run).current;
+  const streams = (n >= 7 ? 2 : 1) + (strong > 1 ? 1 : 0);
   for (let i = 0; i < streams; i++) {
     const horizontal = rng.chance(0.5);
     const dir = rng.chance(0.5) ? 1 : -1;
@@ -21,8 +23,8 @@ export function layoutCurrents(run, n) {
       y: horizontal ? WORLD.h * along : WORLD.h / 2,
       hw: horizontal ? WORLD.w / 2 : 110,
       hh: horizontal ? 110 : WORLD.h / 2,
-      vx: horizontal ? 115 * dir : 0,
-      vy: horizontal ? 0 : 115 * dir,
+      vx: horizontal ? 115 * strong * dir : 0,
+      vy: horizontal ? 0 : 115 * strong * dir,
     });
   }
   if (n >= 6) {
