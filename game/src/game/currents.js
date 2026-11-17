@@ -1,6 +1,6 @@
 // Ocean currents: streams that carry Pip, foes and every bolt in one direction, and vortices that
-// swirl and drag things toward their eye. Each wave lays out its own currents (from wave 3 on),
-// and the Undertow Maw raises a vortex around itself in its second phase. Riding a stream makes
+// swirl and drag things toward their eye. Each wave lays out its own currents (from wave 3 on,
+// boss tides included: a boss fight is fought across a stream), and the Undertow Maw raises a vortex around itself in its second phase. Riding a stream makes
 // Pip faster; fighting one slows Pip down; shots bend as they cross.
 
 import { WORLD } from '../config.js';
@@ -8,7 +8,7 @@ import { routeMods } from './tides.js';
 
 export function layoutCurrents(run, n) {
   run.currents = [];
-  if ((n < 3 || n === 5 || n === 10) && routeMods(run).current === 1) return;
+  if (n < 3 && routeMods(run).current === 1) return;
   const rng = run.rng;
   const strong = routeMods(run).current;
   const streams = (n >= 7 ? 2 : 1) + (strong > 1 ? 1 : 0);

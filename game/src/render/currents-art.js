@@ -27,10 +27,18 @@ function drawStream(ctx, c, t) {
   // Soft band of moving water.
   const g = ctx.createLinearGradient(0, -width / 2, 0, width / 2);
   g.addColorStop(0, 'rgba(120, 230, 255, 0)');
-  g.addColorStop(0.5, 'rgba(120, 230, 255, 0.07)');
+  g.addColorStop(0.5, 'rgba(120, 230, 255, 0.16)');
   g.addColorStop(1, 'rgba(120, 230, 255, 0)');
   ctx.fillStyle = g;
   ctx.fillRect(-len / 2, -width / 2, len, width);
+  // Its banks: faint dashed edges that drift with the flow.
+  ctx.strokeStyle = 'rgba(160, 240, 255, 0.28)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([22, 18]);
+  ctx.lineDashOffset = -t * 60;
+  for (const yy of [-width / 2 + 4, width / 2 - 4]) { ctx.beginPath(); ctx.moveTo(-len / 2, yy); ctx.lineTo(len / 2, yy); ctx.stroke(); }
+  ctx.setLineDash([]);
+  ctx.globalCompositeOperation = 'lighter';
   // Streaks travel along the band; brighter and faster near its centre line.
   ctx.lineCap = 'round';
   const n = Math.round(len / 26);
@@ -39,7 +47,7 @@ function drawStream(ctx, c, t) {
     const speed = 115 * (1 - Math.abs(lane) * 0.6);
     const x = ((i * 97.3 + t * speed) % len + len) % len - len / 2;
     const y = lane * width * 0.45 + Math.sin(t * 1.3 + i) * 6;
-    const a = 0.12 + 0.25 * (1 - Math.abs(lane));
+    const a = 0.16 + 0.34 * (1 - Math.abs(lane));
     ctx.strokeStyle = `rgba(190, 248, 255, ${a})`;
     ctx.lineWidth = 1.5 + (1 - Math.abs(lane)) * 1.5;
     ctx.beginPath();
@@ -48,14 +56,17 @@ function drawStream(ctx, c, t) {
     ctx.stroke();
   }
   // Chevrons along the centre so the direction reads at a glance.
-  ctx.strokeStyle = 'rgba(200, 250, 255, 0.22)';
-  ctx.lineWidth = 3;
-  for (let x = -len / 2 + ((t * 60) % 180); x < len / 2; x += 180) {
-    ctx.beginPath();
-    ctx.moveTo(x - 10, -14);
-    ctx.lineTo(x + 6, 0);
-    ctx.lineTo(x - 10, 14);
-    ctx.stroke();
+  ctx.strokeStyle = 'rgba(200, 250, 255, 0.5)';
+  ctx.lineWidth = 4;
+  ctx.lineJoin = 'round';
+  for (let x = -len / 2 + ((t * 60) % 200); x < len / 2; x += 200) {
+    for (const off of [0, 16]) {
+      ctx.beginPath();
+      ctx.moveTo(x + off - 14, -20);
+      ctx.lineTo(x + off + 6, 0);
+      ctx.lineTo(x + off - 14, 20);
+      ctx.stroke();
+    }
   }
   ctx.restore();
 }

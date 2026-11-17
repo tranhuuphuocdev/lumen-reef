@@ -9,7 +9,7 @@ export function showCallout(target, title, sub, color, life = 1.3) {
 }
 
 // The callout pops in large and tilted, then shrinks and fades. It sits high or low on the screen,
-// whichever half the boss is not in, so it never hides the fight it is shouting about.
+// whichever keeps it further from both Pip and the boss, so it never hides the fight.
 export function drawCallout(ctx, ui, run) {
   const c = ui.callout;
   if (!c || c.life <= 0) return;
@@ -17,9 +17,7 @@ export function drawCallout(ctx, ui, run) {
   const pop = age < 0.12 ? 1.5 - (age / 0.12) * 0.5 : 1;
   const a = Math.min(1, c.life * 3);
   ctx.save();
-  const b = run?.wave.boss;
-  const bossY = b && !b.dead ? (b.y - run.camera.y) * ZOOM + VIEW.h / 2 : VIEW.h;
-  ctx.translate(VIEW.w / 2, bossY > VIEW.h * 0.5 ? 226 : VIEW.h * 0.73);
+  ctx.translate(VIEW.w / 2, calloutY(run));
   ctx.rotate(-0.05);
   ctx.scale(pop, pop);
   text(ctx, c.title, 0, 0, { size: 46, weight: 900, align: 'center', color: c.color, glow: c.color, alpha: a, spacing: 4 });
@@ -27,3 +25,14 @@ export function drawCallout(ctx, ui, run) {
   ctx.restore();
 }
 
+
+export function calloutY(run) {
+  if (!run) return 226;
+  const sy = (q) => (q.y - run.camera.y) * ZOOM + VIEW.h / 2;
+  const b = run.wave.boss;
+  const marks = [sy(run.player)];
+  if (b && !b.dead) marks.push(sy(b));
+  const clear = (y) => Math.min(...marks.map((m) => Math.abs(m - y)));
+  const high = 226, low = VIEW.h * 0.73;
+  return clear(high) >= clear(low) ? high : low;
+}
