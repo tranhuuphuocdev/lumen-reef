@@ -2,10 +2,8 @@
 // choice / pause → results → dive again), input routing, sound events and the saved best score.
 
 import { VIEW, TICK, ZOOM } from './config.js';
-import { createInput } from './core/input.js';
-import { createAudio } from './core/audio.js';
-import { createRun } from './game/state.js';
 import { stepRun, followCamera } from './game/sim.js';
+import { createRun } from './game/state.js';
 import { autopilot, autopilotChoice, createAttractRun } from './game/autopilot.js';
 import { drawChoices, applyMutation } from './game/upgrades.js';
 import { releasePulse } from './game/player.js';
@@ -15,6 +13,8 @@ import { drawHud, drawCrosshair } from './ui/hud.js';
 import { drawTitle, DIFF_ORDER } from './ui/title-screen.js';
 import { drawLevelUp } from './ui/levelup-screen.js';
 import { drawResults, drawPause } from './ui/results-screen.js';
+import { createInput } from './core/input.js';
+import { createAudio } from './core/audio.js';
 import { stageShot } from './shots.js';
 
 const canvas = document.getElementById('game');
@@ -181,7 +181,9 @@ function update(dt) {
   }
 
   if (ui.mode === 'play') {
-    if (input.wasPressed('Escape', 'KeyP')) { ui.mode = 'paused'; return; }
+    if (input.wasPressed('Escape', 'KeyP') || hit === 'key:pause') { ui.mode = 'paused'; return; }
+    if (input.wasPressed('KeyR') || hit === 'key:restart') { startDive(); return; }
+    if (hit === 'key:mute') { audio.init(); ui.muted = audio.toggleMute(); }
     const boss = run.wave.boss && !run.wave.boss.dead;
     audio.setIntensity(boss ? 3 : run.wave.phase === 'fight' ? 2 : 1);
     stepRun(run, playerControl(), dt);
@@ -245,7 +247,7 @@ function render() {
   drawScene(ctx, run, clock);
   if (ui.mode === 'title') drawTitle(ctx, ui, clock);
   else {
-    drawHud(ctx, run, ui, clock);
+    if (ui.mode !== 'results') drawHud(ctx, run, ui, clock);
     if (ui.mode === 'levelup') drawLevelUp(ctx, run, ui, clock);
     if (ui.mode === 'paused') drawPause(ctx, run, ui);
     if (ui.mode === 'results') drawResults(ctx, run, ui, clock);

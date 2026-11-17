@@ -85,6 +85,11 @@ export function updateWaves(run, dt) {
       }
       w.spawnCd = (bossAlive ? 3.2 : Math.max(0.4, 1.35 - n * 0.09)) * (0.7 + run.rng.next() * 0.6);
     }
+    // A tide never stalls: stragglers that keep their distance come hunting after a while.
+    if (!w.queue.length && !bossAlive && run.enemies.length <= 3) {
+      w.stallT = (w.stallT ?? 0) + dt;
+      if (w.stallT > 10) for (const e of run.enemies) e.hunt = true;
+    } else w.stallT = 0;
     if (!w.queue.length && !run.enemies.length && !bossAlive) {
       if (n >= WAVES_TOTAL) {
         w.phase = 'won';

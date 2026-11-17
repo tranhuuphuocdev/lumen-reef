@@ -3,7 +3,7 @@
 
 import { PLAYER, COMBO } from '../config.js';
 import { emit } from './state.js';
-import { burst, floatText, ring, shake, flash, arc } from './effects.js';
+import { burst, floatText, damageText, ring, shake, flash, arc } from './effects.js';
 import { orbitPositions, nearestEnemy } from './weapons.js';
 import { dropGlim, dropHeart } from './pickups.js';
 import { chargePulse } from './player.js';
@@ -28,8 +28,8 @@ export function damageEnemy(run, e, amount, src = {}) {
     e.kx = (e.kx ?? 0) + Math.cos(a) * kb;
     e.ky = (e.ky ?? 0) + Math.sin(a) * kb;
   }
-  if (!src.quiet && (!e.boss || crit)) {
-    floatText(run, e.x + run.rng.range(-10, 10), e.y - e.r - 6, crit ? `${Math.round(dmg)}!` : `${Math.round(dmg)}`, crit ? '#ffd166' : '#e8fbff', crit ? 20 : 14);
+  if (!src.quiet) {
+    damageText(run, e, dmg, crit);
     emit(run, 'hit');
   }
   if (src.venom && s.venom > 0) { e.poison = 3; e.poisonDps = 6 + s.venom * 6; }

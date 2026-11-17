@@ -51,5 +51,9 @@ const GLYPH = {
   ward(ctx, s) { ctx.beginPath(); ctx.arc(0, 0, s * 0.9, 0, Math.PI * 2); ctx.stroke(); ctx.beginPath(); ctx.arc(-s * 0.3, -s * 0.3, s * 0.25, 0, Math.PI * 2); ctx.fill(); },
   deep(ctx, s) { for (const r of [0.3, 0.65, 1]) { ctx.beginPath(); ctx.arc(0, 0, s * r, 0, Math.PI * 2); ctx.stroke(); } },
   venom(ctx, s) { ctx.beginPath(); ctx.moveTo(0, -s); ctx.quadraticCurveTo(s * 0.9, s * 0.2, 0, s * 0.8); ctx.quadraticCurveTo(-s * 0.9, s * 0.2, 0, -s); ctx.stroke(); dot(ctx, 0, s * 0.25, s * 0.22); },
+  wake(ctx, s) { line(ctx, [[-s, s * 0.6], [-s * 0.2, s * 0.6]]); line(ctx, [[-s * 0.1, -s], [-s * 0.5, 0], [s * 0.2, 0], [-s * 0.2, s]]); ctx.beginPath(); ctx.arc(s * 0.4, 0, s * 0.5, -1.2, 1.2); ctx.stroke(); },
+  lens(ctx, s) { ctx.beginPath(); ctx.ellipse(0, 0, s * 0.45, s * 0.95, 0, 0, Math.PI * 2); ctx.stroke(); dot(ctx, 0, 0, s * 0.2); line(ctx, [[-s, 0], [-s * 0.6, 0]]); line(ctx, [[s * 0.6, 0], [s, 0]]); },
+  reflex(ctx, s) { ctx.beginPath(); ctx.moveTo(-s, s * 0.4); ctx.quadraticCurveTo(0, -s * 1.2, s, s * 0.4); ctx.stroke(); line(ctx, [[s * 0.55, s * 0.05], [s, s * 0.4], [s * 0.5, s * 0.6]]); dot(ctx, 0, s * 0.55, s * 0.2); },
+  resonance(ctx, s) { dot(ctx, 0, 0, s * 0.25); for (const r of [0.55, 0.9]) { ctx.beginPath(); ctx.arc(0, 0, s * r, -0.8, 0.8); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0, s * r, Math.PI - 0.8, Math.PI + 0.8); ctx.stroke(); } },
   nova(ctx, s) { for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; line(ctx, [[Math.cos(a) * s * 0.35, Math.sin(a) * s * 0.35], [Math.cos(a) * s, Math.sin(a) * s]]); } dot(ctx, 0, 0, s * 0.25); },
 };

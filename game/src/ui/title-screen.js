@@ -114,5 +114,5 @@ function drawControls(ctx, cx, y) {
     ctx.font = `700 14px sans-serif`;
     x = kx + ctx.measureText(label).width + 30;
   }
-  text(ctx, 'Shoot foes to free glim · level up and choose mutations · chain kills to raise the multiplier · survive wave 10 to win', cx, y + 38, { size: 13, weight: 600, align: 'center', color: '#9cc0d4', stroke: false });
+  text(ctx, 'WIN: survive 10 tides and slay Queen Nacre  ·  LOSE: every shell breaks  ·  level up to choose mutations, chain kills for ×8', cx, y + 38, { size: 13, weight: 600, align: 'center', color: '#9cc0d4', stroke: false });
 }

@@ -21,13 +21,13 @@ export function drawTitleArt(ctx, t) {
     drawEnemy(ctx, actor(`title-f${i}`, 'flicker', x, y, 9, { vx: 90, vy, face: Math.atan2(vy, 90), phase: i }), t);
   }
   // Broodbells drifting upward on the left.
-  const bells = [[150, 470, 34, 0], [300, 250, 22, 2.1], [70, 200, 18, 4.2]];
+  const bells = [[150, 470, 34, 0], [110, 300, 22, 2.1], [70, 160, 18, 4.2]];
   for (const [bx, by, r, ph] of bells) {
     const y = by + Math.sin(t * 0.6 + ph) * 18;
     drawEnemy(ctx, actor(`title-b${ph}`, 'broodbell', bx + Math.sin(t * 0.4 + ph) * 10, y, r, { vx: 0, vy: -20, phase: ph }), t);
   }
   // The Maw, huge, prowling at the lower right with its lure lit.
-  const mx = 1105 + Math.sin(t * 0.35) * 25, my = 585 + Math.sin(t * 0.5) * 14;
+  const mx = 1150 + Math.sin(t * 0.35) * 20, my = 470 + Math.sin(t * 0.5) * 14;
   drawEnemy(ctx, actor('title-maw', 'maw', mx, my, 120, { boss: 'maw', face: Math.PI + 0.12 + Math.sin(t * 0.35) * 0.05, state: 'drift', lureGlow: 0.4 + 0.3 * Math.sin(t * 2) }), t);
   // A Spinewhorl and a Blowfin keep their distance on the right.
   drawEnemy(ctx, actor('title-w', 'whorl', 1150, 210 + Math.sin(t) * 8, 20, { vx: -10, phase: 1 }), t);

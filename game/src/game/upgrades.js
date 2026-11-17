@@ -29,10 +29,10 @@ export const MUTATIONS = [
   { id: 'ward', name: 'Bubble Ward', icon: 'ward', rarity: 'mythic', max: 2, desc: () => 'A bubble blocks one hit, then regrows', apply: (s) => { s.shieldMax += 1; } },
   { id: 'deep', name: 'Deep Pulse', icon: 'deep', rarity: 'rare', max: 3, desc: () => 'Pulse charges 35% faster, reaches further', apply: (s) => { s.pulseRate *= 1.35; s.pulseRadius *= 1.15; } },
   { id: 'venom', name: 'Siren Venom', icon: 'venom', rarity: 'rare', max: 3, desc: () => 'Hits poison foes over time', apply: (s) => { s.venom += 1; } },
-  { id: 'wake', name: 'Static Wake', icon: 'static', rarity: 'rare', max: 1, desc: () => 'Pulse within a second of a dash: lightning leaps from every foe it touches', apply: (s) => { s.wake += 1; } },
-  { id: 'lens', name: 'Glim Lens', icon: 'lure', rarity: 'common', max: 2, desc: () => 'Each glim gathered since your last pulse widens the next one', apply: (s) => { s.lens += 1; } },
-  { id: 'reflex', name: 'Reflex Fins', icon: 'current', rarity: 'rare', max: 2, desc: () => 'Perfect dodges refresh your dash and Surge lasts longer', apply: (s) => { s.reflex += 1; } },
-  { id: 'resonance', name: 'Resonance', icon: 'deep', rarity: 'common', max: 3, desc: () => 'Pulse damage +40%', apply: (s) => { s.sonarDmg += 0.4; } },
+  { id: 'wake', name: 'Static Wake', icon: 'wake', rarity: 'rare', max: 1, desc: () => 'Pulse within a second of a dash: lightning leaps from every foe it touches', apply: (s) => { s.wake += 1; } },
+  { id: 'lens', name: 'Glim Lens', icon: 'lens', rarity: 'common', max: 2, desc: () => 'Each glim gathered since your last pulse widens the next one', apply: (s) => { s.lens += 1; } },
+  { id: 'reflex', name: 'Reflex Fins', icon: 'reflex', rarity: 'rare', max: 2, desc: () => 'Perfect dodges refresh your dash and Surge lasts longer', apply: (s) => { s.reflex += 1; } },
+  { id: 'resonance', name: 'Resonance', icon: 'resonance', rarity: 'common', max: 3, desc: () => 'Pulse damage +40%', apply: (s) => { s.sonarDmg += 0.4; } },
   { id: 'nova', name: 'Starburst', icon: 'nova', rarity: 'mythic', max: 2, desc: () => 'Every 8th shot bursts into a ring of bolts', apply: (s) => { s.nova += 1; } },
 ];
 

@@ -25,6 +25,25 @@ export function floatText(run, x, y, text, color = '#ffffff', size = 18) {
   run.fx.texts.push({ x, y, text, color, size, life: 0.9, max: 0.9 });
 }
 
+// Damage numbers: rapid hits on one foe add up into a single number that grows and re-pops,
+// instead of a pile of overlapping digits.
+export function damageText(run, e, amount, crit) {
+  const texts = run.fx.texts;
+  for (const o of texts) {
+    if (o.target === e.id && o.life > o.max - 0.45) {
+      o.sum += amount;
+      o.crit = o.crit || crit;
+      o.text = `${Math.round(o.sum)}${o.crit ? '!' : ''}`;
+      o.color = o.crit ? '#ffd166' : '#e8fbff';
+      o.size = Math.min(34, (o.crit ? 20 : 15) + Math.log2(1 + o.sum / 20) * 3);
+      o.life = o.max;
+      return;
+    }
+  }
+  if (texts.length > 60) texts.shift();
+  texts.push({ x: e.x + run.rng.range(-8, 8), y: e.y - e.r - 8, text: `${Math.round(amount)}${crit ? '!' : ''}`, color: crit ? '#ffd166' : '#e8fbff', size: crit ? 20 : 15, life: 0.9, max: 0.9, target: e.id, sum: amount, crit });
+}
+
 export function ring(run, x, y, color, radius = 60, life = 0.4, width = 4) {
   run.fx.rings.push({ x, y, color, radius, life, max: life, width });
 }

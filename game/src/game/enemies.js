@@ -195,7 +195,7 @@ const BEHAVIOUR = {
       emit(run, 'enemyShot');
       ring(run, e.x, e.y, '#ff9a5a', 30, 0.25, 3);
     }
-    const ideal = 360;
+    const ideal = e.hunt ? 90 : 360;
     const dir = dP > ideal + 40 ? toP : dP < ideal - 40 ? toP + Math.PI : toP + Math.PI / 2;
     return toward(dir, e.speed * (e.charging ? 0.2 : 1));
   },

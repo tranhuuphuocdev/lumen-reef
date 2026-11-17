@@ -68,10 +68,11 @@ export function applyCurrents(run, dt) {
     p.riding = Math.hypot(f.x, f.y) > 30;
   } else p.riding = false;
   for (const e of run.enemies) {
-    if (e.boss || e.dead) continue;
+    // Foes are only nudged (and hunters not at all), so no current can pin one to a wall.
+    if (e.boss || e.dead || e.hunt) continue;
     const f = flowAt(run, e.x, e.y);
-    e.x += f.x * dt * 0.7;
-    e.y += f.y * dt * 0.7;
+    e.x += f.x * dt * 0.4;
+    e.y += f.y * dt * 0.4;
   }
   for (const b of run.bullets) {
     const f = flowAt(run, b.x, b.y);

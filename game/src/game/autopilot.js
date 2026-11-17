@@ -40,7 +40,7 @@ export function autopilot(run) {
   const orbit = Math.atan2(cy, cx) + Math.PI / 2;
   fx += Math.cos(orbit) * 0.6 + (cx / cd) * Math.min(1.4, cd / 500);
   fy += Math.sin(orbit) * 0.6 + (cy / cd) * Math.min(1.4, cd / 500);
-  if (nearest && nd > 420) { fx += (nearest.x - p.x) / nd * 0.6; fy += (nearest.y - p.y) / nd * 0.6; }
+  if (nearest && (nd > 420 || run.enemies.length <= 3)) { fx += (nearest.x - p.x) / nd * 0.6; fy += (nearest.y - p.y) / nd * 0.6; }
   for (const g of run.pickups) {
     const d = Math.hypot(g.x - p.x, g.y - p.y);
     if (d < 260 && threat < 0.4) { fx += (g.x - p.x) / d * 0.5; fy += (g.y - p.y) / d * 0.5; break; }
