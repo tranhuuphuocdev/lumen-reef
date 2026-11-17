@@ -29,8 +29,8 @@ export function fireVolley(run) {
     for (let i = 0; i < k; i++) spawnBolt(run, p.aim + (i / k) * Math.PI * 2, 0.7);
   }
   // Recoil nudges Pip back a little: shooting has weight.
-  p.vx -= Math.cos(p.aim) * 14;
-  p.vy -= Math.sin(p.aim) * 14;
+  p.vx -= Math.cos(p.aim) * 6;
+  p.vy -= Math.sin(p.aim) * 6;
   emit(run, 'shoot');
 }
 

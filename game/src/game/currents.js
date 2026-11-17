@@ -64,9 +64,13 @@ export function applyCurrents(run, dt) {
   if (!run.currents?.length) return;
   const p = run.player;
   if (!p.dead && p.dashT <= 0) {
+    // Pip feels a current but can always swim against it (flow is capped well below swim speed).
     const f = flowAt(run, p.x, p.y);
-    p.x += f.x * dt;
-    p.y += f.y * dt;
+    const fm = Math.hypot(f.x, f.y);
+    const cap = p.stats.speed * 0.45;
+    const k = fm > cap ? cap / fm : 1;
+    p.x += f.x * k * 0.8 * dt;
+    p.y += f.y * k * 0.8 * dt;
     p.riding = Math.hypot(f.x, f.y) > 30;
   } else p.riding = false;
   for (const e of run.enemies) {

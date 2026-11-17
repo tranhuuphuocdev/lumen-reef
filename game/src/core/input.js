@@ -15,12 +15,25 @@ export function createInput(canvas) {
     mouse.moved = true;
   };
 
+  // Physical key codes, with a fallback from the typed letter: an input method (a Vietnamese
+  // Telex layout treats S, F, R, X, J as tone keys) can report an empty or odd code.
+  const LETTER = { w: 'KeyW', a: 'KeyA', s: 'KeyS', d: 'KeyD', e: 'KeyE', q: 'KeyQ', p: 'KeyP', m: 'KeyM', r: 'KeyR', j: 'KeyJ' };
+  const codeOf = (e) => {
+    const k = (e.key ?? '').toLowerCase();
+    if (e.code && e.code !== 'Unidentified' && !(e.keyCode === 229 && LETTER[k])) return e.code;
+    return LETTER[k] ?? e.code;
+  };
   window.addEventListener('keydown', (e) => {
-    if (['Space', 'Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
-    if (!down.has(e.code)) pressed.add(e.code);
-    down.add(e.code);
+    const code = codeOf(e);
+    if (['Space', 'Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(code) || LETTER[(e.key ?? '').toLowerCase()]) e.preventDefault();
+    if (!down.has(code)) pressed.add(code);
+    down.add(code);
+    if (e.code && e.code !== code) down.add(e.code);
   });
-  window.addEventListener('keyup', (e) => down.delete(e.code));
+  window.addEventListener('keyup', (e) => {
+    down.delete(codeOf(e));
+    if (e.code) down.delete(e.code);
+  });
   window.addEventListener('blur', () => { down.clear(); mouse.left = mouse.right = false; });
   canvas.addEventListener('mousemove', toView);
   canvas.addEventListener('mousedown', (e) => {

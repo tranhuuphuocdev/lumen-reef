@@ -51,9 +51,11 @@ export function followCamera(run, dt, snap = false) {
   const p = run.player;
   const lookX = p.x + (run.lookX ?? 0) * 0.18;
   const lookY = p.y + (run.lookY ?? 0) * 0.18;
+  // The camera may look a little past the arena's top and bottom edges, so Pip is never hidden
+  // under the HUD's top panels or the ability bar when hugging a wall.
   const hw = VIEW.w / 2 / ZOOM, hh = VIEW.h / 2 / ZOOM;
-  const tx = clamp(lookX, hw, WORLD.w - hw);
-  const ty = clamp(lookY, hh, WORLD.h - hh);
+  const tx = clamp(lookX, hw - 40, WORLD.w - hw + 40);
+  const ty = clamp(lookY, hh - 70, WORLD.h - hh + 120);
   run.camera.x = snap ? tx : approach(run.camera.x, tx, 6, dt);
   run.camera.y = snap ? ty : approach(run.camera.y, ty, 6, dt);
 }
