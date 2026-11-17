@@ -8,6 +8,7 @@ import { drawGlow, withAlpha } from '../render/glow.js';
 import { drawTitleArt, drawMiniMaw } from './title-art.js';
 import { drawMutationIcon } from './icons.js';
 import { ROUTES } from '../game/tides.js';
+import { drawRelicIcon } from './relic-icons.js';
 
 export const DIFF_ORDER = ['calm', 'rising', 'abyss'];
 
@@ -70,8 +71,8 @@ export function drawTitle(ctx, ui, t) {
 const STEPS = [
   { title: 'SWIM & SHOOT', color: '#7ff6ff', lines: ['Glow bolts burst the reef\'s foes;', 'their glim levels you up'] },
   { title: 'MUTATE & EVOLVE', color: '#b78cff', lines: ['Pick 1 of 3 mutations a level;', '4 Aspects evolve Pip\'s form'] },
-  { title: 'CHOOSE THE CURRENT', color: '#ff6f9c', lines: ['After each tide pick its route:', 'more danger, up to ×1.7 score'] },
-  { title: 'BREAK THE BOSSES', color: '#ffd166', lines: ['Your sonar pulse staggers them', 'and opens a weak point'] },
+  { title: 'CURRENTS & RELICS', color: '#ff6f9c', lines: ['Pick each tide\'s route (to ×1.7);', 'claim relics that bend the rules'] },
+  { title: 'PULSE THE DARK', color: '#ffd166', lines: ['Your sonar staggers bosses and', 'reveals the unseen Lurkers'] },
 ];
 
 function drawDiveSteps(ctx, cx, y, t) {
@@ -102,14 +103,15 @@ function drawStepArt(ctx, i, x, y, t) {
   } else if (i === 1) {
     ['split', 'static', 'pearls'].forEach((id, k) => drawMutationIcon(ctx, id, x - 52 + k * 52, y, 17));
   } else if (i === 2) {
+    drawRelicIcon(ctx, 'heart', x + 62, y - 2, 17);
     ['slack', 'riptide', 'redbloom'].forEach((id, k) => {
       const r = ROUTES[id];
       const py = y - 22 + k * 19;
       ctx.fillStyle = 'rgba(3, 14, 30, 0.85)';
       ctx.strokeStyle = r.color;
       ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.roundRect(x - 78, py - 8, 156, 16, 8); ctx.fill(); ctx.stroke();
-      text(ctx, `${r.name.toUpperCase()}  ${r.score > 1 ? `×${r.score}` : 'safe'}`, x, py + 4, { size: 11, weight: 900, align: 'center', color: r.color, stroke: false, spacing: 1 });
+      ctx.beginPath(); ctx.roundRect(x - 98, py - 8, 136, 16, 8); ctx.fill(); ctx.stroke();
+      text(ctx, `${r.name.toUpperCase()}  ${r.score > 1 ? `×${r.score}` : 'safe'}`, x - 30, py + 4, { size: 11, weight: 900, align: 'center', color: r.color, stroke: false, spacing: 1 });
     });
   } else {
     ctx.save();
