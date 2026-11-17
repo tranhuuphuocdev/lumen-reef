@@ -9,16 +9,18 @@ import { formatScore } from '../core/math.js';
 import { text, panel, bar } from './widgets.js';
 import { drawHeart } from '../render/projectiles.js';
 import { withAlpha } from '../render/glow.js';
-import { drawObjectives, drawTideTrack, drawIncoming, drawStatus, drawAbilityBar, drawControlsAndKeys } from './hud-panels.js';
+import { drawObjectives, drawTideTrack, drawIncoming, drawStatus, drawBuild, drawAbilityBar, drawControlsAndKeys } from './hud-panels.js';
 import { BOSS_PHASES } from '../game/bosses.js';
 import { routeOf } from '../game/tides.js';
+import { drawCallout } from './callout.js';
 
 export function drawHud(ctx, run, ui, t) {
   const p = run.player;
   drawShells(ctx, run, ui, t);
   drawTideHeader(ctx, run);
   drawScorePanel(ctx, run, ui);
-  drawStatus(ctx, run, 18, 92, t);
+  const statusH = drawStatus(ctx, run, 18, 92, t);
+  drawBuild(ctx, run, 18, 92 + statusH);
   drawIncoming(ctx, run, VIEW.w - 268, 150);
   drawAbilityBar(ctx, run, ui, t);
   drawControlsAndKeys(ctx, ui);
@@ -26,6 +28,7 @@ export function drawHud(ctx, run, ui, t) {
   drawHint(ctx, ui);
   if (ui.volumeT > 0) text(ctx, `VOLUME ${Math.round((ui.volume ?? 0.8) * 100)}%`, VIEW.w / 2, VIEW.h - 150, { size: 16, weight: 800, align: 'center', color: '#cfefff', alpha: Math.min(1, ui.volumeT * 2) });
   drawBanner(ctx, ui);
+  drawCallout(ctx, ui, run);
   if (!p.dead) drawCrosshair(ctx, ui.mouse.x, ui.mouse.y, p.fireCd, t);
 }
 

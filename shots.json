@@ -1,15 +1,16 @@
 [
   {
     "name": "1-boss-fight.jpg",
-    "query": "?shot=play&seed=2&t=9&pulse=0.35"
+    "query": "?shot=play&seed=23&t=8.5&pulse=0.35&build=11",
+    "quality": 68
   },
   {
     "name": "2-title.jpg",
     "query": "?shot=title&seed=1&t=9"
   },
   {
-    "name": "3-evolve.jpg",
-    "query": "?shot=levelup&seed=1"
+    "name": "3-route.jpg",
+    "query": "?shot=route&seed=1"
   },
   {
     "name": "4-victory.jpg",

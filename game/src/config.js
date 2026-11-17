@@ -1,7 +1,7 @@
 // Tuning for LUMEN REEF: every number a designer would want to tweak lives here.
 
-export const VIEW = { w: 1280, h: 720 };
-export const ZOOM = 1.2; // world pixels are drawn 1.2x larger than the 1280x720 view
+export const VIEW = { w: 1280, h: 800 };
+export const ZOOM = 1.2; // world pixels are drawn 1.2x larger than the 1280x800 view
 export const WORLD = { w: 2600, h: 1700, wall: 60 };
 export const TICK = 1 / 60;
 

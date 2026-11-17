@@ -16,12 +16,12 @@ export const WAVE_PLANS = {
   2: { whorl: 18, eel: 6, flicker: 10 },
   3: { whorl: 16, blowfin: 6, eel: 8, spitbloom: 3 },
   4: { whorl: 18, spitbloom: 6, ironclaw: 2, flicker: 14, eel: 6, broodbell: 2 },
-  5: { whorl: 8, flicker: 8 },
+  5: { whorl: 6, flicker: 6, eel: 4, blowfin: 3, spitbloom: 2 },
   6: { whorl: 22, eel: 10, blowfin: 8, spitbloom: 6, ironclaw: 3 },
   7: { flicker: 28, broodbell: 4, spitbloom: 8, ironclaw: 4, eel: 10 },
   8: { whorl: 28, blowfin: 10, spitbloom: 9, ironclaw: 5, broodbell: 4, eel: 12 },
   9: { whorl: 28, eel: 14, blowfin: 12, spitbloom: 11, ironclaw: 6, broodbell: 5, flicker: 18 },
-  10: { whorl: 10, flicker: 10 },
+  10: { whorl: 8, flicker: 8, eel: 4, spitbloom: 3, ironclaw: 2, broodbell: 2 },
 };
 
 export const WAVE_NAMES = {
@@ -57,6 +57,7 @@ export function startWave(run, n) {
   w.boss = null;
   w.noHit = true;
   w.name = WAVE_NAMES[n];
+  w.mark = { score: run.score, kills: run.kills, time: run.time, hits: run.hitsTaken };
   layoutCurrents(run, n);
   emit(run, 'waveStart', { n, name: w.name, boss: !!BOSS_WAVES[n] });
 }
@@ -95,6 +96,7 @@ export function updateWaves(run, dt) {
     } else w.stallT = 0;
     if (!w.queue.length && !run.enemies.length && !bossAlive) {
       if (n >= WAVES_TOTAL) {
+        logTide(run, true);
         w.phase = 'won';
         w.timer = 3;
         emit(run, 'victory');
@@ -106,6 +108,7 @@ export function updateWaves(run, dt) {
       const bonus = Math.round(400 * n * run.diff.score * (w.noHit ? 2 : 1));
       run.score += bonus;
       w.lastBonus = bonus;
+      logTide(run, true);
       floatText(run, run.player.x, run.player.y - 60, w.noHit ? `FLAWLESS +${bonus}` : `TIDE TURNED +${bonus}`, '#ffd166', 26);
       emit(run, 'waveClear', { n, bonus, flawless: w.noHit });
       magnetiseAll(run);
@@ -126,6 +129,17 @@ export function updateWaves(run, dt) {
     w.timer -= dt;
     if (w.timer <= 0 && !run.outcome) run.outcome = 'victory';
   }
+}
+
+// One line of the dive's journal per tide: what it scored, how many fell, whether Pip was hit,
+// and the current it was swum under. The results screen charts it.
+export function logTide(run, cleared) {
+  const w = run.wave;
+  const m = w.mark ?? { score: 0, kills: 0, time: 0, hits: 0 };
+  (run.tideLog ??= []).push({
+    n: w.n, cleared, boss: !!BOSS_WAVES[w.n], route: run.route ?? 'slack', flawless: w.noHit,
+    score: Math.round(run.score - m.score), kills: run.kills - m.kills, time: run.time - m.time,
+  });
 }
 
 export function waveProgress(run) {

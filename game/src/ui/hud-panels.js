@@ -192,12 +192,12 @@ export function drawControlsAndKeys(ctx, ui) {
   }
 }
 
-// Pip's status sheet: form, the four Aspects with their evolution marks, live combat stats and
-// the mutations that built them.
+// Pip's status sheet: form, the four Aspects with their evolution marks and live combat stats.
+// Returns the height it took, so the build list can sit beneath it.
 export function drawStatus(ctx, run, x, y, t) {
   const p = run.player;
   const s = p.stats;
-  const w = 250, h = 236;
+  const w = 250, h = 200;
   const last = isLastLight(run);
   panel(ctx, x, y, w, h, { alpha: 0.76, border: last ? 0.9 : 0.4, color: last ? '#ff6f9c' : '#7ff6ff' });
   text(ctx, 'PIP', x + 14, y + 24, { size: 13, weight: 900, color: '#9cd8ea', stroke: false, spacing: 2 });
@@ -229,14 +229,6 @@ export function drawStatus(ctx, run, x, y, t) {
     text(ctx, k, cx, cy, { size: 11, weight: 900, color: '#7fa6c0', stroke: false, spacing: 1 });
     text(ctx, v, cx + 104, cy, { size: 13, weight: 900, align: 'right', color: '#e6fbff', stroke: false });
   });
-  // Mutations as a row of glyphs with their growth.
-  const ids = Object.keys(run.mutations);
-  ids.slice(0, 11).forEach((id, i) => {
-    const cx = x + 22 + i * 21, cy = y + 210;
-    drawMutationIcon(ctx, id, cx, cy, 9);
-    const l = run.mutations[id];
-    if (l > 1) text(ctx, `${l}`, cx + 7, cy + 10, { size: 9, weight: 900, align: 'center', color: '#ffffff' });
-  });
-  if (!ids.length) text(ctx, 'level up to grow a mutation', x + 14, y + 214, { size: 12, weight: 600, color: '#9cc0d4', stroke: false });
   if (last) text(ctx, 'LAST LIGHT · DMG ×1.5 · PULSE ×2', x + w / 2, y + h + 18, { size: 13, weight: 900, align: 'center', color: '#ff6f9c', glow: '#ff6f9c', alpha: 0.75 + 0.25 * Math.sin(t * 8), spacing: 1 });
+  return h + (last ? 30 : 10);
 }

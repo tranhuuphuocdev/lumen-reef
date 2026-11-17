@@ -27,9 +27,14 @@ export function drawTitleArt(ctx, t) {
     drawEnemy(ctx, actor(`title-b${ph}`, 'broodbell', bx + Math.sin(t * 0.4 + ph) * 10, y, r, { vx: 0, vy: -20, phase: ph }), t);
   }
   // The Maw, huge, prowling at the lower right with its lure lit.
-  const mx = 1150 + Math.sin(t * 0.35) * 20, my = 470 + Math.sin(t * 0.5) * 14;
+  const mx = 1150 + Math.sin(t * 0.35) * 20, my = 390 + Math.sin(t * 0.5) * 14;
   drawEnemy(ctx, actor('title-maw', 'maw', mx, my, 120, { boss: 'maw', face: Math.PI + 0.12 + Math.sin(t * 0.35) * 0.05, state: 'drift', lureGlow: 0.4 + 0.3 * Math.sin(t * 2) }), t);
   // A Spinewhorl and a Blowfin keep their distance on the right.
-  drawEnemy(ctx, actor('title-w', 'whorl', 1150, 210 + Math.sin(t) * 8, 20, { vx: -10, phase: 1 }), t);
-  drawEnemy(ctx, actor('title-p', 'blowfin', 980, 330 + Math.sin(t * 0.8) * 10, 18, { vx: -30, face: Math.PI }), t);
+  drawEnemy(ctx, actor('title-w', 'whorl', 1180, 150 + Math.sin(t) * 8, 20, { vx: -10, phase: 1 }), t);
+  drawEnemy(ctx, actor('title-p', 'blowfin', 1100, 600 + Math.sin(t * 0.8) * 10, 18, { vx: -30, face: Math.PI }), t);
+}
+
+// A small Undertow Maw for the title's how-to strip.
+export function drawMiniMaw(ctx, x, y, r, t) {
+  drawEnemy(ctx, actor('title-mini-maw', 'maw', x, y, r, { boss: 'maw', face: Math.PI, state: 'drift', lureGlow: 0.6 }), t);
 }

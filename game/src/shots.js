@@ -10,6 +10,7 @@ import { startWave } from './game/waves.js';
 import { spawnEnemy } from './game/enemies.js';
 import { autopilot, autopilotChoice, createAttractRun } from './game/autopilot.js';
 import { applyMutation, drawChoices } from './game/upgrades.js';
+import { showCallout } from './ui/callout.js';
 
 function simulate(run, seconds, { autoPick = true } = {}) {
   const steps = Math.round(seconds / TICK);
@@ -41,13 +42,16 @@ export function stageShot(name, ui) {
     followCamera(run, 0, true);
     ui.mode = 'title';
     ui.best = 48210;
-    return { run, clock: run.time, mouse: { x: 640, y: 479 } };
+    return { run, clock: run.time, mouse: { x: 700, y: 438 } };
   }
 
   if (name === 'play') {
     const run = createRun({ seed: 90 + seed, demo: 'invincible' });
-    grow(run, ['split', 'split', 'dense', 'dense', 'keen', 'bloom', 'pearls', 'static', 'deep', 'resonance', 'quick']);
-    run.level = 12;
+    // build=N keeps the first N mutations: a lighter build fights the boss longer, as a real dive at tide 5 does.
+    const picks = ['split', 'dense', 'keen', 'pearls', 'deep', 'split', 'static', 'dense', 'bloom', 'resonance', 'quick'];
+    const nb = Number(params.get('build') ?? picks.length);
+    grow(run, picks.slice(0, nb));
+    run.level = nb + 1;
     run.xpNext = 52;
     run.xp = 31;
     run.score = 16420;
@@ -73,29 +77,42 @@ export function stageShot(name, ui) {
     const b = run.wave.boss;
     // Frame Pip and the Maw together, as a player watching the fight would see it.
     if (b) {
-      run.camera.x = clamp((run.player.x + b.x) / 2, VIEW.w / 2 / ZOOM, WORLD.w - VIEW.w / 2 / ZOOM);
-      run.camera.y = clamp((run.player.y + b.y) / 2 - 40, VIEW.h / 2 / ZOOM, WORLD.h - VIEW.h / 2 / ZOOM);
+      // Pip and the Maw weigh most; escorts within reach pull the frame toward them a little.
+      const near = run.enemies.filter((e) => !e.dead && !e.boss && Math.hypot(e.x - run.player.x, e.y - run.player.y) < 600);
+      const pts = [run.player, run.player, b, b, b, b, ...near];
+      const cx = pts.reduce((s, q) => s + q.x, 0) / pts.length, cy = pts.reduce((s, q) => s + q.y, 0) / pts.length;
+      run.camera.x = clamp(cx, VIEW.w / 2 / ZOOM, WORLD.w - VIEW.w / 2 / ZOOM);
+      run.camera.y = clamp(cy + 30, VIEW.h / 2 / ZOOM, WORLD.h - VIEW.h / 2 / ZOOM);
     } else followCamera(run, 0, true);
+    // Numbers that drifted under the HUD panels would read as glitches in a still frame.
+    const underHud = (q) => {
+      const x = (q.x - run.camera.x) * ZOOM + VIEW.w / 2, y = (q.y - run.camera.y) * ZOOM + VIEW.h / 2;
+      return x < 280 || x > VIEW.w - 280 || y < 175 || y > VIEW.h - 120;
+    };
+    run.fx.texts = run.fx.texts.filter((q) => !underHud(q));
     ui.mode = 'play';
     ui.banner = null;
-    const mx = b ? 640 + (b.x - run.camera.x) * ZOOM : 900;
-    const my = b ? 360 + (b.y - run.camera.y) * ZOOM : 300;
+    const mx = b ? VIEW.w / 2 + (b.x - run.camera.x) * ZOOM : 900;
+    const my = b ? VIEW.h / 2 + (b.y - run.camera.y) * ZOOM : 300;
+    // The pulse that just broke the boss's attack is shouted across the fight, as in play.
+    if (b && pulseAt > 0 && b.exposed > 0) showCallout(ui, 'STAGGERED!', 'WEAK POINT OPEN · DAMAGE ×2.2', '#ffd166', 1.3 - pulseAt * 0.4);
     return { run, clock: run.time, mouse: { x: mx, y: my } };
   }
 
   if (name === 'route') {
+    // A dive played from its first tide by the pilot, which picks its own currents until the tide
+    // before the choice; then the choice is left to the player, as in play.
     const run = createRun({ seed: 700 + seed, demo: 'invincible' });
-    grow(run, ['split', 'quick', 'pearls', 'static']);
+    const upTo = Number(params.get('tide') ?? 7);
+    for (let i = 0; i < 60 * 900 && !(run.wave.n === upTo && run.wave.phase === 'fight'); i++) simulate(run, TICK);
     run.manualRoute = true;
-    startWave(run, 4);
-    // Fight the tide out until the route choice comes up, as it does in play.
-    for (let i = 0; i < 60 * 120 && run.wave.phase !== 'route'; i++) simulate(run, TICK);
-    run.routeChoices = ['slack', 'riptide', 'redbloom'];
-    run.wave.n = 4;
+    for (let i = 0; i < 60 * 180 && run.wave.phase !== 'route'; i++) simulate(run, TICK);
+    run.hitsTaken = 2;
+    for (const l of run.tideLog ?? []) if ([3, 6].includes(l.n)) l.flawless = false;
     followCamera(run, 0, true);
     ui.mode = 'route';
     ui.routeAge = 2;
-    return { run, clock: run.time, mouse: { x: 1040, y: 540 } };
+    return { run, clock: run.time, mouse: { x: 1040, y: 530 } };
   }
 
   if (name === 'bestiary') {
@@ -143,18 +160,20 @@ export function stageShot(name, ui) {
     ui.mode = 'levelup';
     ui.levelAge = 2;
     ui.cardSel = -1;
-    return { run, clock: run.time, mouse: { x: 700, y: 520 } };
+    return { run, clock: run.time, mouse: { x: 690, y: 330 } };
   }
 
   // 'end': a whole dive played start to finish by the pilot, ending on the results screen.
   const run = createRun({ seed: 7 + seed, demo: 'invincible' });
   simulate(run, 1500);
   if (!run.outcome) run.outcome = 'victory';
+  // The pilot swims invincible; give its journal the three hits its rank card claims.
   run.hitsTaken = 3;
+  for (const l of run.tideLog ?? []) if ([4, 7, 9].includes(l.n)) l.flawless = false;
   followCamera(run, 0, true);
   ui.mode = 'results';
   ui.resultAge = 3;
   ui.best = Math.floor(run.score);
   ui.newBest = true;
-  return { run, clock: run.time, mouse: { x: 520, y: 577 } };
+  return { run, clock: run.time, mouse: { x: 470, y: 700 } };
 }

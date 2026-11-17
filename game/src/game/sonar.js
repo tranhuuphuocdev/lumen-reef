@@ -95,7 +95,7 @@ function sonarHit(run, w, e, d) {
     run.score += Math.round(80 * run.mult * run.diff.score);
     run.comboT = Math.max(run.comboT, 2.4);
     ring(run, e.x, e.y, '#7ff6ff', e.r * 2, 0.4, 3);
-    emit(run, 'interrupt');
+    emit(run, 'interrupt', { boss: !!e.boss, what: broke });
   }
   if (w.charged) {
     // Static Wake: lightning leaps from each foe the wave touches.

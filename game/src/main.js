@@ -10,6 +10,7 @@ import { releasePulse } from './game/player.js';
 import { buildReef } from './render/background.js';
 import { drawScene } from './render/scene-renderer.js';
 import { drawHud, drawCrosshair } from './ui/hud.js';
+import { showCallout } from './ui/callout.js';
 import { drawTitle, DIFF_ORDER } from './ui/title-screen.js';
 import { drawLevelUp } from './ui/levelup-screen.js';
 import { drawRouteChoice } from './ui/route-screen.js';
@@ -147,8 +148,14 @@ function drainEvents() {
         showBanner('LAST LIGHT', 'ONE SHELL LEFT · DAMAGE ×1.5 · PULSE CHARGES ×2', '#ff6f9c', false, 2.4);
         break;
       case 'surge': audio.sfx.surge(); break;
-      case 'interrupt': audio.sfx.interrupt(); break;
-      case 'milestone': audio.sfx.milestone(); break;
+      case 'interrupt':
+        audio.sfx.interrupt();
+        if (d.boss) showCallout(ui, d.what === 'SHELL CRACKED' ? 'SHELL CRACKED!' : 'STAGGERED!', 'WEAK POINT OPEN · DAMAGE ×2.2', '#ffd166');
+        break;
+      case 'milestone':
+        audio.sfx.milestone();
+        showCallout(ui, `CHAIN ${d.chain}!`, 'SURGE · FIRE RATE ×1.6', '#ff6f9c');
+        break;
       case 'bossPhase':
         audio.sfx.bossPhase();
         showBanner(`PHASE ${d.n}`, d.name, '#ff5c8a', true, 2.2);
@@ -171,6 +178,7 @@ function update(dt) {
   const hit = clickedButton();
   if (input.wasPressed('KeyM')) { audio.init(); ui.muted = audio.toggleMute(); }
   if (ui.banner) ui.banner.life -= dt;
+  if (ui.callout) ui.callout.life -= dt;
   if (ui.hint) ui.hint.life -= dt;
   if (input.wasPressed('Minus', 'NumpadSubtract')) { audio.init(); ui.volume = audio.setVolume(audio.volume - 0.1); ui.volumeT = 1.5; }
   if (input.wasPressed('Equal', 'NumpadAdd')) { audio.init(); ui.volume = audio.setVolume(audio.volume + 0.1); ui.volumeT = 1.5; }
@@ -306,7 +314,7 @@ resize();
 // Screenshot staging (?shot=...) freezes a prepared scene instead of running the loop.
 const shot = new URLSearchParams(location.search).get('shot');
 if (shot) {
-  // Draw at exactly the 1280x720 view, whatever the capture window's size.
+  // Draw at exactly the 1280x800 view, whatever the capture window's size.
   window.removeEventListener('resize', resize);
   canvas.width = VIEW.w;
   canvas.height = VIEW.h;

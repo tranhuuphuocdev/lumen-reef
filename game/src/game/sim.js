@@ -8,7 +8,7 @@ import { updateBullets } from './weapons.js';
 import { updateEnemies } from './enemies.js';
 import { resolveCombat } from './combat.js';
 import { updatePickups } from './pickups.js';
-import { updateWaves, startWave } from './waves.js';
+import { updateWaves, startWave, logTide } from './waves.js';
 import { updateEffects } from './effects.js';
 import { applyCurrents } from './currents.js';
 import { updateSonar } from './sonar.js';
@@ -42,7 +42,7 @@ export function stepRun(run, ctl, dt) {
   }
   if (run.player.dead) {
     run.deadT = (run.deadT ?? 0) + dt;
-    if (run.deadT > 2.2 && !run.outcome) run.outcome = 'defeat';
+    if (run.deadT > 2.2 && !run.outcome) { logTide(run, false); run.outcome = 'defeat'; }
   }
   followCamera(run, dt);
 }

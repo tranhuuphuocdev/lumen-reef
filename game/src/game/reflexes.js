@@ -48,7 +48,7 @@ export function updateReflexes(run, dt) {
   const milestone = Math.floor(run.combo / 25);
   if (milestone > (run.lastMilestone ?? 0)) {
     grantSurge(run, 4, `${milestone * 25} CHAIN — SURGE`);
-    emit(run, 'milestone');
+    emit(run, 'milestone', { chain: milestone * 25 });
   }
   run.lastMilestone = milestone;
 }

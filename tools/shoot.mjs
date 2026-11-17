@@ -1,5 +1,5 @@
 // Captures the game's screenshots with headless Chrome: for each scene in shots.json it opens
-// game/index.html?shot=<scene>, waits for the page to title itself "ready", saves a 1280x720 PNG
+// game/index.html?shot=<scene>, waits for the page to title itself "ready", saves a 1280x800 PNG
 // and converts it to a JPEG under screenshots/ (macOS sips). Needs `node serve.ts --port <p>`.
 //   node tools/shoot.mjs [port] [only-name]
 
@@ -22,7 +22,7 @@ for (const s of shots) {
   const args = [
     '--headless=new', '--disable-gpu', '--hide-scrollbars', '--mute-audio', '--no-first-run',
     `--user-data-dir=${join(tmpdir(), `lumen-shot-${process.pid}`)}`,
-    '--force-device-scale-factor=1', '--window-size=1280,720', '--virtual-time-budget=20000',
+    '--force-device-scale-factor=1', '--window-size=1280,800', '--virtual-time-budget=20000',
     `--screenshot=${png}`, url,
   ];
   // Headless Chrome occasionally stalls on start; one retry is enough in practice.
